@@ -13,9 +13,17 @@ router.get("/search", usersController.searchUsers);
 router.get("/me", usersController.getMyProfile);
 
 // PATCH /users/me
-router.patch("/me", uploadAvatar.single("avatar"), usersController.updateProfile);
+router.patch(
+    "/me",
+    uploadAvatar.single("avatar"),
+    usersController.updateProfile,
+);
 
 // GET /users/:id
 router.get("/:id", usersController.getUserProfile);
+
+// GET /users/:id/posts
+const postsController = require("../posts/posts.controller");
+router.get("/:id/posts", postsController.getUserPosts);
 
 module.exports = router;
