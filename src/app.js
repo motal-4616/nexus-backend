@@ -19,7 +19,7 @@ app.get("/api/v1/health", (req, res) => {
 
 // Routes
 app.use("/api/v1/auth", require("./modules/auth/auth.routes"));
-// app.use("/api/v1/users", require("./modules/users/users.routes"));
+app.use("/api/v1/users", require("./modules/users/users.routes"));
 // app.use("/api/v1/posts", require("./modules/posts/posts.routes"));
 // app.use("/api/v1/friends", require("./modules/friends/friends.routes"));
 // app.use("/api/v1/conversations", require("./modules/messages/messages.routes"));
