@@ -17,7 +17,10 @@ const userSchema = new mongoose.Schema(
             trim: true,
             minlength: [3, "Username must be at least 3 characters"],
             maxlength: [30, "Username cannot exceed 30 characters"],
-            match: [/^[a-z0-9_.]+$/, "Username can only contain letters, numbers, dots and underscores"],
+            match: [
+                /^[a-z0-9_.]+$/,
+                "Username can only contain letters, numbers, dots and underscores",
+            ],
         },
         email: {
             type: String,
@@ -70,14 +73,13 @@ const userSchema = new mongoose.Schema(
                 return ret;
             },
         },
-    }
+    },
 );
 
 // Hash password before saving
-userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
     this.password = await bcrypt.hash(this.password, 12);
-    next();
 });
 
 // Compare plain password with hashed

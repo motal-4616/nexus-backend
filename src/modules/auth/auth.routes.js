@@ -45,7 +45,17 @@ router.post("/register", authLimiter, validateRegister, register);
 router.post("/login", authLimiter, validateLogin, login);
 router.post("/refresh", authLimiter, refreshToken);
 router.post("/logout", logout);
-router.post("/forgot-password", strictLimiter, validateForgotPassword, forgotPassword);
-router.post("/reset-password/:token", strictLimiter, validateResetPassword, resetPassword);
+router.post(
+    "/forgot-password",
+    strictLimiter,
+    validateForgotPassword,
+    forgotPassword,
+);
+router.post(
+    "/reset-password/:token",
+    strictLimiter,
+    validateResetPassword,
+    resetPassword,
+);
 
 module.exports = router;
