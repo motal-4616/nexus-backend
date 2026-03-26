@@ -7,6 +7,7 @@ const createPost = async (req, res) => {
             req.user._id,
             req.body.content,
             req.files,
+            req.body.audience,
         );
         sendResponse(res, 201, "Post created", post);
     } catch (err) {

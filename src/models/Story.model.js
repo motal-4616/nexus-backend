@@ -33,6 +33,11 @@ const storySchema = new mongoose.Schema(
                 ref: "User",
             },
         ],
+        audience: {
+            type: String,
+            enum: ['public', 'friends', 'private'],
+            default: 'public',
+        },
     },
     {
         timestamps: true,

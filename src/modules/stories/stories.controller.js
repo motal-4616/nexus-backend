@@ -7,6 +7,7 @@ const createStory = async (req, res) => {
             req.user._id,
             req.file,
             req.body.duration,
+            req.body.audience,
         );
         sendResponse(res, 201, "Story created", story);
     } catch (err) {
