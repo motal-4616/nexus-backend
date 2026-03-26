@@ -1,4 +1,5 @@
 const Friendship = require("../../models/Friendship.model");
+const { createAndPushNotification } = require("../../utils/notification.util");
 
 const sendRequest = async (requesterId, recipientId) => {
     if (requesterId.toString() === recipientId.toString()) {
@@ -31,10 +32,22 @@ const sendRequest = async (requesterId, recipientId) => {
         }
     }
 
-    return Friendship.create({
+    const friendship = await Friendship.create({
         requester: requesterId,
         recipient: recipientId,
     });
+
+    // Notify recipient about the friend request
+    createAndPushNotification({
+        recipientId: recipientId,
+        actorId: requesterId,
+        type: "friend_request",
+        targetRef: friendship._id,
+        targetModel: "Friendship",
+        message: "sent you a friend request",
+    }).catch(() => {});
+
+    return friendship;
 };
 
 const acceptRequest = async (currentUserId, requesterId) => {
@@ -49,6 +62,17 @@ const acceptRequest = async (currentUserId, requesterId) => {
 
     friendship.status = "accepted";
     await friendship.save();
+
+    // Notify requester that their request was accepted
+    createAndPushNotification({
+        recipientId: requesterId,
+        actorId: currentUserId,
+        type: "friend_accept",
+        targetRef: friendship._id,
+        targetModel: "Friendship",
+        message: "accepted your friend request",
+    }).catch(() => {});
+
     return friendship;
 };
 

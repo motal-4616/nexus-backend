@@ -23,7 +23,10 @@ app.use("/api/v1/users", require("./modules/users/users.routes"));
 app.use("/api/v1/posts", require("./modules/posts/posts.routes"));
 app.use("/api/v1/friends", require("./modules/friends/friends.routes"));
 app.use("/api/v1/conversations", require("./modules/messages/messages.routes"));
-// app.use("/api/v1/notifications", require("./modules/notifications/notifications.routes"));
+app.use(
+    "/api/v1/notifications",
+    require("./modules/notifications/notifications.routes"),
+);
 
 // 404 handler
 app.use((req, res) => {

@@ -1,5 +1,6 @@
 const Post = require("../../models/Post.model");
 const Comment = require("../../models/Comment.model");
+const { createAndPushNotification } = require("../../utils/notification.util");
 
 const createPost = async (authorId, content, files) => {
     const media = (files || []).map((f) => ({
@@ -79,6 +80,17 @@ const toggleLike = async (postId, userId) => {
         post.likes.push(userId);
         post.likesCount = post.likes.length;
         await post.save();
+
+        // Notify post author about the like
+        createAndPushNotification({
+            recipientId: post.author,
+            actorId: userId,
+            type: "like",
+            targetRef: post._id,
+            targetModel: "Post",
+            message: "liked your post",
+        }).catch(() => {});
+
         return { liked: true, likesCount: post.likesCount };
     } else {
         post.likes.splice(idx, 1);
@@ -100,6 +112,16 @@ const addComment = async (postId, authorId, content) => {
 
     post.commentsCount += 1;
     await post.save();
+
+    // Notify post author about the comment
+    createAndPushNotification({
+        recipientId: post.author,
+        actorId: authorId,
+        type: "comment",
+        targetRef: post._id,
+        targetModel: "Post",
+        message: "commented on your post",
+    }).catch(() => {});
 
     return Comment.findById(comment._id).populate(
         "author",
