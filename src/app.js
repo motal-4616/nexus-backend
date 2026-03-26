@@ -5,10 +5,30 @@ const morgan = require("morgan");
 
 const app = express();
 
+// Parse allowed origins from FRONTEND_URL env var (comma-separated)
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 // Security & logging middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
-app.use(morgan("dev"));
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            // Allow requests with no origin (mobile apps, Postman, curl)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            callback(new Error(`CORS: origin '${origin}' not allowed`));
+        },
+        credentials: true,
+    }),
+);
+if (process.env.NODE_ENV !== "production") {
+    app.use(morgan("dev"));
+}
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
