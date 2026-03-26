@@ -129,6 +129,29 @@ const getUserPosts = async (req, res) => {
     }
 };
 
+const searchPosts = async (req, res) => {
+    try {
+        const { q, cursor, limit } = req.query;
+        if (!q || !q.trim()) {
+            return sendResponse(res, 200, "Search results", {
+                posts: [],
+                hasMore: false,
+                nextCursor: null,
+            });
+        }
+        const result = await postsService.searchPosts(
+            q.trim(),
+            req.user._id,
+            cursor || null,
+            parseInt(limit) || 10,
+        );
+        sendResponse(res, 200, "Search results", result);
+    } catch (err) {
+        console.error("searchPosts error:", err);
+        sendError(res, 500, "Search failed");
+    }
+};
+
 module.exports = {
     createPost,
     getFeed,
@@ -138,4 +161,5 @@ module.exports = {
     addComment,
     getComments,
     getUserPosts,
+    searchPosts,
 };

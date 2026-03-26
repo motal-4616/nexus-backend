@@ -62,6 +62,7 @@ app.use(
     "/api/v1/notifications",
     require("./modules/notifications/notifications.routes"),
 );
+app.use("/api/v1/stories", require("./modules/stories/stories.routes"));
 
 // 404 handler
 app.use((req, res) => {

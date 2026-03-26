@@ -169,6 +169,31 @@ const getUserPosts = async (userId, cursor, limit = 10) => {
     return { posts, hasMore, nextCursor };
 };
 
+const searchPosts = async (query, userId, cursor, limit = 10) => {
+    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    const filter = { content: regex };
+    if (cursor) {
+        filter._id = { $lt: cursor };
+    }
+
+    const posts = await Post.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .populate("author", "name username avatar")
+        .lean();
+
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
+    const enriched = posts.map((p) => ({
+        ...p,
+        isLiked: p.likes?.some((id) => id.toString() === userId.toString()),
+    }));
+
+    return { posts: enriched, hasMore, nextCursor };
+};
+
 module.exports = {
     createPost,
     getFeed,
@@ -178,4 +203,5 @@ module.exports = {
     addComment,
     getComments,
     getUserPosts,
+    searchPosts,
 };
