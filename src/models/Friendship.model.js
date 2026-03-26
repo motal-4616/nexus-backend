@@ -1,26 +1,26 @@
 const mongoose = require("mongoose");
 
 const friendshipSchema = new mongoose.Schema(
-  {
-    requester: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
+    {
+        requester: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
+        recipient: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
+        status: {
+            type: String,
+            enum: ["pending", "accepted", "blocked"],
+            default: "pending",
+        },
     },
-    recipient: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
-    status: {
-      type: String,
-      enum: ["pending", "accepted", "blocked"],
-      default: "pending",
-    },
-  },
-  { timestamps: true },
+    { timestamps: true },
 );
 
 // Ensure unique pair (one direction only — always requester < recipient for lookup)

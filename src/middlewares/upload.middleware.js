@@ -32,4 +32,18 @@ const uploadPostMedia = multer({
     limits: { fileSize: 20 * 1024 * 1024 },
 });
 
-module.exports = { uploadAvatar, uploadPostMedia };
+const chatMediaStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: "nexus/chat",
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "mp4", "mov"],
+        resource_type: "auto",
+    },
+});
+
+const uploadChatMedia = multer({
+    storage: chatMediaStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+module.exports = { uploadAvatar, uploadPostMedia, uploadChatMedia };
