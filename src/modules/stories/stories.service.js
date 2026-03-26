@@ -27,10 +27,7 @@ const createStory = async (authorId, file, duration) => {
         expiresAt,
     });
 
-    return Story.findById(story._id).populate(
-        "author",
-        "name username avatar",
-    );
+    return Story.findById(story._id).populate("author", "name username avatar");
 };
 
 const getFeedStories = async (userId) => {

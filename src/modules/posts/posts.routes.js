@@ -7,7 +7,11 @@ const postsController = require("./posts.controller");
 router.use(authMiddleware);
 
 // POST /posts — create post (up to 10 images/videos)
-router.post("/", uploadPostMedia.array("media", 10), postsController.createPost);
+router.post(
+    "/",
+    uploadPostMedia.array("media", 10),
+    postsController.createPost,
+);
 
 // GET /posts/feed — news feed with cursor pagination
 router.get("/feed", postsController.getFeed);
