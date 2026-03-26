@@ -6,19 +6,34 @@ const morgan = require("morgan");
 const app = express();
 
 // Parse allowed origins from FRONTEND_URL env var (comma-separated)
-const allowedOrigins = (process.env.FRONTEND_URL || "")
+const configuredOrigins = (process.env.FRONTEND_URL || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+
+// Always allow Capacitor/Ionic mobile app origins
+const mobileOrigins = [
+    "capacitor://localhost",
+    "ionic://localhost",
+    "http://localhost",
+    "https://localhost",
+    "http://localhost:8100",
+    "http://localhost:4200",
+];
+
+const allowedOrigins = [...mobileOrigins, ...configuredOrigins];
 
 // Security & logging middleware
 app.use(helmet());
 app.use(
     cors({
         origin: (origin, callback) => {
-            // Allow requests with no origin (mobile apps, Postman, curl)
+            // Allow requests with no origin (Postman, curl, server-to-server)
             if (!origin) return callback(null, true);
-            if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+            if (
+                configuredOrigins.length === 0 ||
+                allowedOrigins.includes(origin)
+            ) {
                 return callback(null, true);
             }
             callback(new Error(`CORS: origin '${origin}' not allowed`));
