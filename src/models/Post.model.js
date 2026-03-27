@@ -34,8 +34,8 @@ const postSchema = new mongoose.Schema(
         commentsCount: { type: Number, default: 0 },
         audience: {
             type: String,
-            enum: ['public', 'friends', 'private'],
-            default: 'public',
+            enum: ["public", "friends", "private"],
+            default: "public",
         },
     },
     {

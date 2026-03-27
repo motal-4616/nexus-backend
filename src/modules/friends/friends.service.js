@@ -1,4 +1,5 @@
 const Friendship = require("../../models/Friendship.model");
+const Notification = require("../../models/Notification.model");
 const { createAndPushNotification } = require("../../utils/notification.util");
 
 const sendRequest = async (requesterId, recipientId) => {
@@ -85,6 +86,14 @@ const rejectOrUnfriend = async (currentUserId, otherUserId) => {
     });
 
     if (!friendship) return null;
+
+    // Clean up related friend_request notifications
+    await Notification.deleteMany({
+        $or: [
+            { actor: currentUserId, recipient: otherUserId, type: "friend_request" },
+            { actor: otherUserId, recipient: currentUserId, type: "friend_request" },
+        ],
+    });
 
     await friendship.deleteOne();
     return true;

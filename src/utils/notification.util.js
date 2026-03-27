@@ -16,6 +16,15 @@ const createAndPushNotification = async ({
     // Don't notify yourself
     if (recipientId.toString() === actorId.toString()) return null;
 
+    // For friend requests, remove old duplicate notifications first
+    if (type === "friend_request") {
+        await Notification.deleteMany({
+            recipient: recipientId,
+            actor: actorId,
+            type: "friend_request",
+        });
+    }
+
     const notification = await Notification.create({
         recipient: recipientId,
         actor: actorId,

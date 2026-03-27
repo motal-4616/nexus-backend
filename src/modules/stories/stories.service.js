@@ -1,7 +1,7 @@
 const Story = require("../../models/Story.model");
 const Friendship = require("../../models/Friendship.model");
 
-const createStory = async (authorId, file, duration, audience = 'public') => {
+const createStory = async (authorId, file, duration, audience = "public") => {
     if (!file) {
         throw Object.assign(new Error("Story requires an image or video"), {
             status: 400,
@@ -19,7 +19,9 @@ const createStory = async (authorId, file, duration, audience = 'public') => {
     };
 
     const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
-    const validAudience = ['public', 'friends', 'private'].includes(audience) ? audience : 'public';
+    const validAudience = ["public", "friends", "private"].includes(audience)
+        ? audience
+        : "public";
 
     const story = await Story.create({
         author: authorId,
@@ -52,9 +54,11 @@ const getFeedStories = async (userId) => {
         author: { $in: friendIds },
         expiresAt: { $gt: new Date() },
         $or: [
-            { audience: 'public' },
-            { audience: 'friends' },
-            { author: userId, audience: 'private' },
+            { audience: "public" },
+            { audience: { $exists: false } },
+            { audience: null },
+            { audience: "friends" },
+            { author: userId, audience: "private" },
         ],
     })
         .sort({ createdAt: -1 })
