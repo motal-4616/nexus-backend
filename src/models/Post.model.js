@@ -50,5 +50,7 @@ const postSchema = new mongoose.Schema(
 );
 
 postSchema.index({ createdAt: -1 });
+postSchema.index({ author: 1, _id: -1 });
+postSchema.index({ audience: 1, _id: -1 });
 
 module.exports = mongoose.model("Post", postSchema);

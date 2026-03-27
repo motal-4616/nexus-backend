@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const compression = require("compression");
 
 const app = express();
 
@@ -24,6 +25,7 @@ const mobileOrigins = [
 const allowedOrigins = [...mobileOrigins, ...configuredOrigins];
 
 // Security & logging middleware
+app.use(compression());
 app.use(helmet());
 app.use(
     cors({

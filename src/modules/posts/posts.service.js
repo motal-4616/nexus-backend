@@ -64,11 +64,16 @@ const getFeed = async (userId, cursor, limit = 10) => {
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
 
-    // Add isLiked flag for current user
-    const enriched = posts.map((p) => ({
-        ...p,
-        isLiked: p.likes?.some((id) => id.toString() === userId.toString()),
-    }));
+    // Add isLiked flag for current user, strip likes array
+    const enriched = posts.map((p) => {
+        const { likes, ...rest } = p;
+        return {
+            ...rest,
+            isLiked: likes?.some(
+                (id) => id.toString() === userId.toString(),
+            ),
+        };
+    });
 
     return { posts: enriched, hasMore, nextCursor };
 };
@@ -79,9 +84,10 @@ const getPostById = async (postId, userId) => {
         .lean();
     if (!post) return null;
 
+    const { likes, ...rest } = post;
     return {
-        ...post,
-        isLiked: post.likes?.some((id) => id.toString() === userId.toString()),
+        ...rest,
+        isLiked: likes?.some((id) => id.toString() === userId.toString()),
     };
 };
 
@@ -193,7 +199,8 @@ const getUserPosts = async (userId, cursor, limit = 10) => {
     if (hasMore) posts.pop();
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
-    return { posts, hasMore, nextCursor };
+    const cleaned = posts.map(({ likes, ...rest }) => rest);
+    return { posts: cleaned, hasMore, nextCursor };
 };
 
 const searchPosts = async (query, userId, cursor, limit = 10) => {
@@ -213,10 +220,15 @@ const searchPosts = async (query, userId, cursor, limit = 10) => {
     if (hasMore) posts.pop();
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
-    const enriched = posts.map((p) => ({
-        ...p,
-        isLiked: p.likes?.some((id) => id.toString() === userId.toString()),
-    }));
+    const enriched = posts.map((p) => {
+        const { likes, ...rest } = p;
+        return {
+            ...rest,
+            isLiked: likes?.some(
+                (id) => id.toString() === userId.toString(),
+            ),
+        };
+    });
 
     return { posts: enriched, hasMore, nextCursor };
 };

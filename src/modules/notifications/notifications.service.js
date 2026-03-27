@@ -6,11 +6,14 @@ const getNotifications = async (userId, cursor, limit = 20) => {
         query._id = { $lt: cursor };
     }
 
-    const notifications = await Notification.find(query)
-        .sort({ createdAt: -1 })
-        .limit(limit + 1)
-        .populate("actor", "name username avatar")
-        .lean();
+    const [notifications, unreadCount] = await Promise.all([
+        Notification.find(query)
+            .sort({ createdAt: -1 })
+            .limit(limit + 1)
+            .populate("actor", "name username avatar")
+            .lean(),
+        Notification.countDocuments({ recipient: userId, isRead: false }),
+    ]);
 
     const hasMore = notifications.length > limit;
     if (hasMore) notifications.pop();
@@ -19,12 +22,6 @@ const getNotifications = async (userId, cursor, limit = 20) => {
         notifications.length > 0
             ? notifications[notifications.length - 1]._id
             : null;
-
-    // Count total unread
-    const unreadCount = await Notification.countDocuments({
-        recipient: userId,
-        isRead: false,
-    });
 
     return { notifications, hasMore, nextCursor, unreadCount };
 };

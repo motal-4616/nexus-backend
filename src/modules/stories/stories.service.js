@@ -76,7 +76,13 @@ const getFeedStories = async (userId) => {
             };
         }
         grouped[aid].stories.push({
-            ...story,
+            _id: story._id,
+            author: story.author,
+            media: story.media,
+            duration: story.duration,
+            expiresAt: story.expiresAt,
+            audience: story.audience,
+            createdAt: story.createdAt,
             isViewed: story.views?.some(
                 (id) => id.toString() === userId.toString(),
             ),

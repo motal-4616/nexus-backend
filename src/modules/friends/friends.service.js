@@ -90,8 +90,16 @@ const rejectOrUnfriend = async (currentUserId, otherUserId) => {
     // Clean up related friend_request notifications
     await Notification.deleteMany({
         $or: [
-            { actor: currentUserId, recipient: otherUserId, type: "friend_request" },
-            { actor: otherUserId, recipient: currentUserId, type: "friend_request" },
+            {
+                actor: currentUserId,
+                recipient: otherUserId,
+                type: "friend_request",
+            },
+            {
+                actor: otherUserId,
+                recipient: currentUserId,
+                type: "friend_request",
+            },
         ],
     });
 

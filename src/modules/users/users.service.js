@@ -1,36 +1,23 @@
 const User = require("../../models/User.model");
+const Post = require("../../models/Post.model");
+const Friendship = require("../../models/Friendship.model");
 
 const getMyProfile = async (userId) => {
-    return User.findById(userId);
+    return User.findById(userId).lean();
 };
 
 const getUserProfile = async (userId) => {
-    const user = await User.findById(userId);
-    if (!user) return null;
-
-    const mongoose = require("mongoose");
-
-    let postsCount = 0;
-    let friendsCount = 0;
-
-    try {
-        const Post = mongoose.model("Post");
-        postsCount = await Post.countDocuments({ author: userId });
-    } catch {}
-
-    try {
-        const Friendship = mongoose.model("Friendship");
-        friendsCount = await Friendship.countDocuments({
+    const [user, postsCount, friendsCount] = await Promise.all([
+        User.findById(userId).lean(),
+        Post.countDocuments({ author: userId }),
+        Friendship.countDocuments({
             $or: [{ requester: userId }, { recipient: userId }],
             status: "accepted",
-        });
-    } catch {}
+        }),
+    ]);
+    if (!user) return null;
 
-    return {
-        ...user.toJSON(),
-        postsCount,
-        friendsCount,
-    };
+    return { ...user, postsCount, friendsCount };
 };
 
 const updateProfile = async (userId, updates, file) => {
