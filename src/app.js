@@ -29,10 +29,13 @@ const allowedOrigins = [...mobileOrigins, ...configuredOrigins];
 app.use(compression());
 
 // Relaxed helmet for admin panel (allows CDN scripts/styles)
-app.use("/admin", helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-}));
+app.use(
+    "/admin",
+    helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+    }),
+);
 // Strict helmet for API routes
 app.use("/api", helmet());
 app.use(

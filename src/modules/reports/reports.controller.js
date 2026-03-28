@@ -5,7 +5,11 @@ const createReport = async (req, res) => {
     try {
         const { targetType, targetId, reason } = req.body;
         if (!targetType || !targetId || !reason) {
-            return sendError(res, 400, "targetType, targetId and reason are required");
+            return sendError(
+                res,
+                400,
+                "targetType, targetId and reason are required",
+            );
         }
 
         const reportData = {

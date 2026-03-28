@@ -13,29 +13,50 @@ const getDashboard = async () => {
             User.countDocuments({ isBanned: true }),
         ]);
 
-    return { totalUsers, totalPosts, totalReports, pendingReports, bannedUsers };
+    return {
+        totalUsers,
+        totalPosts,
+        totalReports,
+        pendingReports,
+        bannedUsers,
+    };
 };
 
 const getUsers = async (page = 1, limit = 20, search = "") => {
     const filter = {};
     if (search) {
-        const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        const regex = new RegExp(
+            search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            "i",
+        );
         filter.$or = [{ name: regex }, { username: regex }, { email: regex }];
     }
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
-        User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+        User.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
         User.countDocuments(filter),
     ]);
     return { users, total, page, totalPages: Math.ceil(total / limit) };
 };
 
 const banUser = async (userId) => {
-    return User.findByIdAndUpdate(userId, { isBanned: true }, { new: true }).lean();
+    return User.findByIdAndUpdate(
+        userId,
+        { isBanned: true },
+        { new: true },
+    ).lean();
 };
 
 const unbanUser = async (userId) => {
-    return User.findByIdAndUpdate(userId, { isBanned: false }, { new: true }).lean();
+    return User.findByIdAndUpdate(
+        userId,
+        { isBanned: false },
+        { new: true },
+    ).lean();
 };
 
 const deleteUser = async (userId) => {
@@ -47,7 +68,10 @@ const deleteUser = async (userId) => {
 const getPosts = async (page = 1, limit = 20, search = "") => {
     const filter = {};
     if (search) {
-        const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        const regex = new RegExp(
+            search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            "i",
+        );
         filter.content = regex;
     }
     const skip = (page - 1) * limit;
@@ -98,11 +122,19 @@ const getReports = async (page = 1, limit = 20, status = "") => {
 };
 
 const resolveReport = async (reportId) => {
-    return Report.findByIdAndUpdate(reportId, { status: "resolved" }, { new: true });
+    return Report.findByIdAndUpdate(
+        reportId,
+        { status: "resolved" },
+        { new: true },
+    );
 };
 
 const dismissReport = async (reportId) => {
-    return Report.findByIdAndUpdate(reportId, { status: "dismissed" }, { new: true });
+    return Report.findByIdAndUpdate(
+        reportId,
+        { status: "dismissed" },
+        { new: true },
+    );
 };
 
 const deleteReportedPost = async (reportId) => {
