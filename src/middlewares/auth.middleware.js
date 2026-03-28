@@ -23,6 +23,10 @@ const authMiddleware = async (req, res, next) => {
             return sendError(res, 401, "User no longer exists");
         }
 
+        if (user.isBanned) {
+            return sendError(res, 403, "Your account has been banned");
+        }
+
         req.user = user;
         next();
     } catch (err) {

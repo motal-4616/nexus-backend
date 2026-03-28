@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -26,7 +27,14 @@ const allowedOrigins = [...mobileOrigins, ...configuredOrigins];
 
 // Security & logging middleware
 app.use(compression());
-app.use(helmet());
+
+// Relaxed helmet for admin panel (allows CDN scripts/styles)
+app.use("/admin", helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+}));
+// Strict helmet for API routes
+app.use("/api", helmet());
 app.use(
     cors({
         origin: (origin, callback) => {
@@ -65,6 +73,11 @@ app.use(
     require("./modules/notifications/notifications.routes"),
 );
 app.use("/api/v1/stories", require("./modules/stories/stories.routes"));
+app.use("/api/v1/reports", require("./modules/reports/reports.routes"));
+app.use("/api/v1/admin", require("./modules/admin/admin.routes"));
+
+// Serve admin panel
+app.use("/admin", express.static(path.join(__dirname, "admin")));
 
 // 404 handler
 app.use((req, res) => {

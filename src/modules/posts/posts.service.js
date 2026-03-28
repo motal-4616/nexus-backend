@@ -69,9 +69,7 @@ const getFeed = async (userId, cursor, limit = 10) => {
         const { likes, ...rest } = p;
         return {
             ...rest,
-            isLiked: likes?.some(
-                (id) => id.toString() === userId.toString(),
-            ),
+            isLiked: likes?.some((id) => id.toString() === userId.toString()),
         };
     });
 
@@ -224,9 +222,7 @@ const searchPosts = async (query, userId, cursor, limit = 10) => {
         const { likes, ...rest } = p;
         return {
             ...rest,
-            isLiked: likes?.some(
-                (id) => id.toString() === userId.toString(),
-            ),
+            isLiked: likes?.some((id) => id.toString() === userId.toString()),
         };
     });
 

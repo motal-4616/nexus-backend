@@ -45,6 +45,15 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        role: {
+            type: String,
+            enum: ["user", "admin"],
+            default: "user",
+        },
+        isBanned: {
+            type: Boolean,
+            default: false,
+        },
         refreshToken: {
             type: String,
             default: null,

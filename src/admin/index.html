@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .tab-active { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(99,102,241,0.15); }
+        .stat-card { transition: all 0.3s ease; }
+        .btn-action { transition: all 0.2s ease; }
+        .btn-action:hover { transform: scale(1.05); }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover { padding-left: 1.25rem; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        .table-row:hover { background-color: #f8fafc; }
+        .modal-overlay { backdrop-filter: blur(4px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Login Screen -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-primary-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shield-halved text-2xl text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Nexus Admin</h1>
+            <p class="text-gray-500 mt-1">Đăng nhập để quản lý hệ thống</p>
+        </div>
+        <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="loginEmail" placeholder="admin@nexus.com"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                <input type="password" id="loginPassword" placeholder="••••••••"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition">
+            </div>
+            <button onclick="handleLogin()" id="loginBtn"
+                class="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-primary-500/30">
+                Đăng nhập
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Main Admin Panel -->
+<div id="adminPanel" class="hidden min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20">
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-gray-800">Nexus Admin</h2>
+                    <p class="text-xs text-gray-400" id="adminName">Admin</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600 tab-active">
+                <i class="fas fa-chart-pie w-5 text-center"></i>
+                <span class="font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchTab('users')" id="nav-users"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-users w-5 text-center"></i>
+                <span class="font-medium">Người dùng</span>
+            </button>
+            <button onclick="switchTab('posts')" id="nav-posts"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-newspaper w-5 text-center"></i>
+                <span class="font-medium">Bài viết</span>
+            </button>
+            <button onclick="switchTab('reports')" id="nav-reports"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-flag w-5 text-center"></i>
+                <span class="font-medium">Báo cáo</span>
+                <span id="reportBadge" class="hidden ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"></span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <button onclick="handleLogout()"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition">
+                <i class="fas fa-right-from-bracket w-5 text-center"></i>
+                <span class="font-medium">Đăng xuất</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 p-8">
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-content fade-in">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                <p class="text-gray-500 mt-1">Tổng quan hệ thống Nexus</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-blue-600 text-lg"></i>
+                        </div>
+                        <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Tổng</span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="statUsers">—</p>
+                    <p class="text-sm text-gray-500 mt-1">Người dùng</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-newspaper text-green-600 text-lg"></i>
+                        </div>
+                        <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">Tổng</span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="statPosts">—</p>
+                    <p class="text-sm text-gray-500 mt-1">Bài viết</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-flag text-orange-600 text-lg"></i>
+                        </div>
+                        <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Chờ xử lý</span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="statPending">—</p>
+                    <p class="text-sm text-gray-500 mt-1">Báo cáo chờ</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-ban text-red-600 text-lg"></i>
+                        </div>
+                        <span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">Bị cấm</span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-800" id="statBanned">—</p>
+                    <p class="text-sm text-gray-500 mt-1">Tài khoản bị cấm</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-flag text-orange-500 mr-2"></i>Báo cáo mới nhất</h3>
+                    <div id="recentReports" class="space-y-3">
+                        <p class="text-gray-400 text-sm">Đang tải...</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4"><i class="fas fa-user-plus text-blue-500 mr-2"></i>Người dùng mới nhất</h3>
+                    <div id="recentUsers" class="space-y-3">
+                        <p class="text-gray-400 text-sm">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="tab-users" class="tab-content hidden fade-in">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Người dùng</h1>
+                    <p class="text-gray-500 mt-1">Quản lý tài khoản người dùng</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="userSearch" placeholder="Tìm kiếm người dùng..."
+                            class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-72">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Người dùng</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vai trò</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                            <th class="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="usersPagination" class="flex items-center justify-between mt-4"></div>
+        </div>
+
+        <!-- Posts Tab -->
+        <div id="tab-posts" class="tab-content hidden fade-in">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Bài viết</h1>
+                    <p class="text-gray-500 mt-1">Quản lý nội dung bài viết</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="postSearch" placeholder="Tìm kiếm bài viết..."
+                            class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-72">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tác giả</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nội dung</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Loại</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lượt thích</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày đăng</th>
+                            <th class="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsTableBody">
+                        <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="postsPagination" class="flex items-center justify-between mt-4"></div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="tab-reports" class="tab-content hidden fade-in">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Báo cáo</h1>
+                    <p class="text-gray-500 mt-1">Quản lý báo cáo vi phạm</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="reportFilter"
+                        class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none">
+                        <option value="">Tất cả</option>
+                        <option value="pending" selected>Chờ xử lý</option>
+                        <option value="resolved">Đã giải quyết</option>
+                        <option value="dismissed">Đã bỏ qua</option>
+                    </select>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Người báo cáo</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Loại</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mục tiêu</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lý do</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày</th>
+                            <th class="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="reportsPagination" class="flex items-center justify-between mt-4"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay bg-black/40">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md fade-in">
+        <div class="flex items-center gap-3 mb-4">
+            <div id="modalIcon" class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+            </div>
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800">Xác nhận</h3>
+        </div>
+        <p id="modalMessage" class="text-gray-600 mb-6"></p>
+        <div class="flex justify-end gap-3">
+            <button onclick="closeModal()" class="px-5 py-2.5 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition font-medium">Hủy</button>
+            <button id="modalConfirmBtn" class="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition font-medium">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-white font-medium fade-in"></div>
+
+<script>
+// ========== CONFIG ==========
+const API_BASE = window.location.origin + '/api/v1';
+let token = localStorage.getItem('admin_token') || '';
+let currentTab = 'dashboard';
+let usersPage = 1, postsPage = 1, reportsPage = 1;
+let searchTimeout = null;
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+    if (token) {
+        verifyAdmin();
+    }
+
+    document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+    document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+    document.getElementById('userSearch').addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { usersPage = 1; loadUsers(); }, 400);
+    });
+    document.getElementById('postSearch').addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { postsPage = 1; loadPosts(); }, 400);
+    });
+    document.getElementById('reportFilter').addEventListener('change', () => { reportsPage = 1; loadReports(); });
+});
+
+// ========== API HELPER ==========
+async function api(method, path, body = null) {
+    const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
+    };
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (body) opts.body = JSON.stringify(body);
+
+    const res = await fetch(API_BASE + path, opts);
+    const data = await res.json();
+
+    if (res.status === 401 || res.status === 403) {
+        if (path !== '/auth/login') {
+            handleLogout();
+            throw new Error('Session expired');
+        }
+    }
+    if (!res.ok) throw new Error(data.message || 'Request failed');
+    return data;
+}
+
+// ========== AUTH ==========
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+        errorEl.textContent = 'Vui lòng nhập email và mật khẩu';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang đăng nhập...';
+    errorEl.classList.add('hidden');
+
+    try {
+        const data = await api('POST', '/auth/login', { email, password });
+        if (data.data.user.role !== 'admin') {
+            throw new Error('Tài khoản không có quyền admin');
+        }
+        token = data.data.accessToken;
+        localStorage.setItem('admin_token', token);
+        document.getElementById('adminName').textContent = data.data.user.name;
+        showAdminPanel();
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Đăng nhập';
+    }
+}
+
+async function verifyAdmin() {
+    try {
+        const data = await api('GET', '/users/profile');
+        if (data.data.role !== 'admin') throw new Error('Not admin');
+        document.getElementById('adminName').textContent = data.data.name;
+        showAdminPanel();
+    } catch {
+        localStorage.removeItem('admin_token');
+        token = '';
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('admin_token');
+    token = '';
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+}
+
+function showAdminPanel() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadDashboard();
+}
+
+// ========== TAB SWITCH ==========
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.sidebar-link').forEach(el => {
+        el.classList.remove('tab-active');
+        el.classList.add('text-gray-600');
+    });
+
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    document.getElementById('nav-' + tab).classList.add('tab-active');
+    document.getElementById('nav-' + tab).classList.remove('text-gray-600');
+
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'users') loadUsers();
+    else if (tab === 'posts') loadPosts();
+    else if (tab === 'reports') loadReports();
+}
+
+// ========== DASHBOARD ==========
+async function loadDashboard() {
+    try {
+        const data = await api('GET', '/admin/dashboard');
+        const s = data.data;
+        document.getElementById('statUsers').textContent = s.totalUsers.toLocaleString();
+        document.getElementById('statPosts').textContent = s.totalPosts.toLocaleString();
+        document.getElementById('statPending').textContent = s.pendingReports.toLocaleString();
+        document.getElementById('statBanned').textContent = s.bannedUsers.toLocaleString();
+
+        if (s.pendingReports > 0) {
+            document.getElementById('reportBadge').textContent = s.pendingReports;
+            document.getElementById('reportBadge').classList.remove('hidden');
+        } else {
+            document.getElementById('reportBadge').classList.add('hidden');
+        }
+
+        // Load recent reports
+        const reportsData = await api('GET', '/admin/reports?limit=5&status=pending');
+        const reportsContainer = document.getElementById('recentReports');
+        if (reportsData.data.reports.length === 0) {
+            reportsContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Không có báo cáo nào</p>';
+        } else {
+            reportsContainer.innerHTML = reportsData.data.reports.map(r => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-flag text-orange-500 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">${escapeHtml(r.reporter?.name || 'Unknown')}</p>
+                            <p class="text-xs text-gray-400">${escapeHtml(r.reason?.substring(0, 50) || '')}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400">${formatDate(r.createdAt)}</span>
+                </div>
+            `).join('');
+        }
+
+        // Load recent users
+        const usersData = await api('GET', '/admin/users?limit=5');
+        const usersContainer = document.getElementById('recentUsers');
+        if (usersData.data.users.length === 0) {
+            usersContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Chưa có người dùng nào</p>';
+        } else {
+            usersContainer.innerHTML = usersData.data.users.map(u => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <img src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name) + '&background=6366f1&color=fff'}"
+                            class="w-8 h-8 rounded-lg object-cover" alt="">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">${escapeHtml(u.name)}</p>
+                            <p class="text-xs text-gray-400">@${escapeHtml(u.username)}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400">${formatDate(u.createdAt)}</span>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('Dashboard error:', err);
+    }
+}
+
+// ========== USERS ==========
+async function loadUsers() {
+    const search = document.getElementById('userSearch').value.trim();
+    const params = new URLSearchParams({ page: usersPage, limit: 15 });
+    if (search) params.set('search', search);
+
+    try {
+        const data = await api('GET', '/admin/users?' + params);
+        const { users, total, totalPages: pages } = data.data;
+        const tbody = document.getElementById('usersTableBody');
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Không tìm thấy người dùng nào</td></tr>';
+        } else {
+            tbody.innerHTML = users.map(u => `
+                <tr class="table-row border-b border-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name) + '&background=6366f1&color=fff'}"
+                                class="w-9 h-9 rounded-xl object-cover" alt="">
+                            <div>
+                                <p class="font-medium text-gray-800">${escapeHtml(u.name)}</p>
+                                <p class="text-xs text-gray-400">@${escapeHtml(u.username)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${escapeHtml(u.email)}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}">${u.role}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${u.isBanned ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                            ${u.isBanned ? 'Bị cấm' : 'Hoạt động'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${formatDate(u.createdAt)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            ${u.role !== 'admin' ? `
+                                ${u.isBanned ? `
+                                    <button onclick="confirmAction('Mở khóa người dùng', 'Bạn muốn mở khóa tài khoản ${escapeAttr(u.name)}?', () => unbanUser('${u._id}'))"
+                                        class="btn-action px-3 py-1.5 text-xs font-medium bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Mở khóa">
+                                        <i class="fas fa-unlock"></i>
+                                    </button>
+                                ` : `
+                                    <button onclick="confirmAction('Cấm người dùng', 'Bạn muốn cấm tài khoản ${escapeAttr(u.name)}?', () => banUser('${u._id}'))"
+                                        class="btn-action px-3 py-1.5 text-xs font-medium bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100" title="Cấm">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                `}
+                                <button onclick="confirmAction('Xóa người dùng', 'Bạn muốn xóa vĩnh viễn tài khoản ${escapeAttr(u.name)}? Hành động này không thể hoàn tác.', () => deleteUser('${u._id}'))"
+                                    class="btn-action px-3 py-1.5 text-xs font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : '<span class="text-xs text-gray-400">Admin</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderPagination('usersPagination', usersPage, pages, total, (p) => { usersPage = p; loadUsers(); });
+    } catch (err) {
+        console.error('Users error:', err);
+    }
+}
+
+async function banUser(id) {
+    try {
+        await api('PATCH', `/admin/users/${id}/ban`);
+        showToast('Đã cấm người dùng', 'bg-orange-500');
+        loadUsers();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+async function unbanUser(id) {
+    try {
+        await api('PATCH', `/admin/users/${id}/unban`);
+        showToast('Đã mở khóa người dùng', 'bg-green-500');
+        loadUsers();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+async function deleteUser(id) {
+    try {
+        await api('DELETE', `/admin/users/${id}`);
+        showToast('Đã xóa người dùng', 'bg-red-500');
+        loadUsers();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+// ========== POSTS ==========
+async function loadPosts() {
+    const search = document.getElementById('postSearch').value.trim();
+    const params = new URLSearchParams({ page: postsPage, limit: 15 });
+    if (search) params.set('search', search);
+
+    try {
+        const data = await api('GET', '/admin/posts?' + params);
+        const { posts, total, totalPages: pages } = data.data;
+        const tbody = document.getElementById('postsTableBody');
+
+        if (posts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td></tr>';
+        } else {
+            tbody.innerHTML = posts.map(p => `
+                <tr class="table-row border-b border-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${p.author?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.author?.name || 'U') + '&background=6366f1&color=fff'}"
+                                class="w-9 h-9 rounded-xl object-cover" alt="">
+                            <div>
+                                <p class="font-medium text-gray-800">${escapeHtml(p.author?.name || 'Deleted')}</p>
+                                <p class="text-xs text-gray-400">@${escapeHtml(p.author?.username || '')}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm text-gray-700 max-w-xs truncate">${escapeHtml(p.content?.substring(0, 100) || '')}</p>
+                        ${p.image ? '<span class="text-xs text-primary-500"><i class="fas fa-image mr-1"></i>Có ảnh</span>' : ''}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">${p.audience || 'public'}</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                        <i class="fas fa-heart text-red-400 mr-1"></i>${p.likesCount || 0}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${formatDate(p.createdAt)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="confirmAction('Xóa bài viết', 'Bạn muốn xóa vĩnh viễn bài viết này?', () => deletePost('${p._id}'))"
+                            class="btn-action px-3 py-1.5 text-xs font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderPagination('postsPagination', postsPage, pages, total, (p) => { postsPage = p; loadPosts(); });
+    } catch (err) {
+        console.error('Posts error:', err);
+    }
+}
+
+async function deletePost(id) {
+    try {
+        await api('DELETE', `/admin/posts/${id}`);
+        showToast('Đã xóa bài viết', 'bg-red-500');
+        loadPosts();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+// ========== REPORTS ==========
+async function loadReports() {
+    const status = document.getElementById('reportFilter').value;
+    const params = new URLSearchParams({ page: reportsPage, limit: 15 });
+    if (status) params.set('status', status);
+
+    try {
+        const data = await api('GET', '/admin/reports?' + params);
+        const { reports, total, totalPages: pages } = data.data;
+        const tbody = document.getElementById('reportsTableBody');
+
+        if (reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Không có báo cáo nào</td></tr>';
+        } else {
+            tbody.innerHTML = reports.map(r => `
+                <tr class="table-row border-b border-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${r.reporter?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(r.reporter?.name || 'U') + '&background=6366f1&color=fff'}"
+                                class="w-8 h-8 rounded-lg object-cover" alt="">
+                            <p class="text-sm font-medium text-gray-700">${escapeHtml(r.reporter?.name || 'Unknown')}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${r.targetType === 'post' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">
+                            ${r.targetType === 'post' ? '<i class="fas fa-newspaper mr-1"></i>Bài viết' : '<i class="fas fa-user mr-1"></i>Người dùng'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                        ${r.targetType === 'post'
+                            ? escapeHtml(r.targetPost?.content?.substring(0, 50) || 'Đã xóa')
+                            : escapeHtml(r.targetUser?.name || 'Đã xóa')}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">${escapeHtml(r.reason || '')}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${
+                            r.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                            r.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-600'
+                        }">
+                            ${r.status === 'pending' ? 'Chờ xử lý' : r.status === 'resolved' ? 'Đã giải quyết' : 'Đã bỏ qua'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${formatDate(r.createdAt)}</td>
+                    <td class="px-6 py-4 text-right">
+                        ${r.status === 'pending' ? `
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="confirmAction('Giải quyết báo cáo', 'Đánh dấu báo cáo này đã được giải quyết?', () => resolveReport('${r._id}'))"
+                                    class="btn-action px-3 py-1.5 text-xs font-medium bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Giải quyết">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="confirmAction('Bỏ qua báo cáo', 'Bạn muốn bỏ qua báo cáo này?', () => dismissReport('${r._id}'))"
+                                    class="btn-action px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100" title="Bỏ qua">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                ${r.targetType === 'post' && r.targetPost ? `
+                                    <button onclick="confirmAction('Xóa bài viết vi phạm', 'Xóa bài viết bị báo cáo và đánh dấu đã giải quyết?', () => deleteReportedPost('${r._id}'))"
+                                        class="btn-action px-3 py-1.5 text-xs font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Xóa bài viết">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        ` : '<span class="text-xs text-gray-400">Đã xử lý</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderPagination('reportsPagination', reportsPage, pages, total, (p) => { reportsPage = p; loadReports(); });
+    } catch (err) {
+        console.error('Reports error:', err);
+    }
+}
+
+async function resolveReport(id) {
+    try {
+        await api('PATCH', `/admin/reports/${id}/resolve`);
+        showToast('Đã giải quyết báo cáo', 'bg-green-500');
+        loadReports();
+        loadDashboard();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+async function dismissReport(id) {
+    try {
+        await api('PATCH', `/admin/reports/${id}/dismiss`);
+        showToast('Đã bỏ qua báo cáo', 'bg-gray-500');
+        loadReports();
+        loadDashboard();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+async function deleteReportedPost(id) {
+    try {
+        await api('DELETE', `/admin/reports/${id}/delete-post`);
+        showToast('Đã xóa bài viết vi phạm', 'bg-red-500');
+        loadReports();
+        loadDashboard();
+    } catch (err) { showToast(err.message, 'bg-red-500'); }
+}
+
+// ========== UI HELPERS ==========
+function renderPagination(containerId, currentPage, totalPages, total, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (totalPages <= 1) { container.innerHTML = `<p class="text-sm text-gray-500">Tổng: ${total}</p>`; return; }
+
+    let pages = '';
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+    if (start > 1) pages += `<button class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100" onclick="void(0)">1</button>`;
+    if (start > 2) pages += '<span class="text-gray-400">...</span>';
+
+    for (let i = start; i <= end; i++) {
+        pages += `<button class="px-3 py-1.5 text-sm rounded-lg ${i === currentPage ? 'bg-primary-500 text-white' : 'hover:bg-gray-100 text-gray-600'}">${i}</button>`;
+    }
+
+    if (end < totalPages - 1) pages += '<span class="text-gray-400">...</span>';
+    if (end < totalPages) pages += `<button class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100">${totalPages}</button>`;
+
+    container.innerHTML = `
+        <p class="text-sm text-gray-500">Tổng: ${total}</p>
+        <div class="flex items-center gap-1">${pages}</div>
+    `;
+
+    container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => onPageChange(parseInt(btn.textContent)));
+    });
+}
+
+let modalCallback = null;
+function confirmAction(title, message, callback) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    modalCallback = callback;
+    document.getElementById('confirmModal').classList.remove('hidden');
+    document.getElementById('modalConfirmBtn').onclick = async () => {
+        closeModal();
+        if (modalCallback) await modalCallback();
+    };
+}
+
+function closeModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    modalCallback = null;
+}
+
+function showToast(message, bg = 'bg-primary-500') {
+    const toast = document.getElementById('toast');
+    toast.className = `fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-white font-medium fade-in ${bg}`;
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Close modal on backdrop click
+document.getElementById('confirmModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+});
+</script>
+</body>
+</html>
