@@ -23,7 +23,12 @@ const mobileOrigins = [
     "http://localhost:4200",
 ];
 
-const allowedOrigins = [...mobileOrigins, ...configuredOrigins];
+// Allow the backend's own public URL (for admin panel same-origin API calls)
+const selfOrigins = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? [`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`]
+    : [];
+
+const allowedOrigins = [...mobileOrigins, ...configuredOrigins, ...selfOrigins];
 
 // Security & logging middleware
 app.use(compression());
