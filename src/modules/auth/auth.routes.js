@@ -53,12 +53,7 @@ router.post(
     validateForgotPassword,
     forgotPassword,
 );
-router.post(
-    "/verify-otp",
-    strictLimiter,
-    validateVerifyOTP,
-    verifyOTP,
-);
+router.post("/verify-otp", strictLimiter, validateVerifyOTP, verifyOTP);
 router.post(
     "/reset-password",
     strictLimiter,

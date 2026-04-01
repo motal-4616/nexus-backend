@@ -145,10 +145,7 @@ const forgotPassword = async (req, res) => {
 
         // Generate 6-digit OTP, store SHA-256 hash
         const otp = String(crypto.randomInt(100000, 999999));
-        const hashedOTP = crypto
-            .createHash("sha256")
-            .update(otp)
-            .digest("hex");
+        const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
 
         user.resetOTP = hashedOTP;
         user.resetOTPExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
@@ -172,10 +169,7 @@ const verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
-        const hashedOTP = crypto
-            .createHash("sha256")
-            .update(otp)
-            .digest("hex");
+        const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
 
         const user = await User.findOne({
             email,
@@ -199,10 +193,7 @@ const resetPassword = async (req, res) => {
     try {
         const { email, otp, password } = req.body;
 
-        const hashedOTP = crypto
-            .createHash("sha256")
-            .update(otp)
-            .digest("hex");
+        const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
 
         const user = await User.findOne({
             email,
