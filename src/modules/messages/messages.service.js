@@ -206,10 +206,38 @@ const markSeen = async (conversationId, userId) => {
     return true;
 };
 
+const sendTyping = async (conversationId, userId) => {
+    const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId,
+    });
+
+    if (!conversation) {
+        throw Object.assign(new Error("Conversation not found"), {
+            status: 404,
+        });
+    }
+
+    // Trigger typing event to other participants
+    conversation.participants.forEach((participantId) => {
+        if (participantId.toString() !== userId.toString()) {
+            pusher.trigger(
+                `private-user-${participantId.toString()}`,
+                "typing",
+                {
+                    conversationId,
+                    userId,
+                },
+            );
+        }
+    });
+};
+
 module.exports = {
     getOrCreateConversation,
     getConversations,
     getMessages,
     sendMessage,
     markSeen,
+    sendTyping,
 };

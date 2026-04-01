@@ -70,10 +70,20 @@ const markSeen = async (req, res) => {
     }
 };
 
+const sendTyping = async (req, res) => {
+    try {
+        await messagesService.sendTyping(req.params.id, req.user.id);
+        sendResponse(res, 200, "Typing event sent");
+    } catch (err) {
+        sendError(res, err.status || 500, err.message);
+    }
+};
+
 module.exports = {
     getConversations,
     createConversation,
     getMessages,
     sendMessage,
     markSeen,
+    sendTyping,
 };

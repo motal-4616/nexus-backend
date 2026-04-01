@@ -28,6 +28,13 @@ const authMiddleware = async (req, res, next) => {
         }
 
         req.user = user;
+
+        // Update lastActive (non-blocking, throttle to once per minute)
+        const oneMinAgo = new Date(Date.now() - 60000);
+        if (!user.lastActive || user.lastActive < oneMinAgo) {
+            User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch(() => {});
+        }
+
         next();
     } catch (err) {
         console.error("authMiddleware error:", err);

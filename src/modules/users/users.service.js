@@ -63,4 +63,10 @@ const searchUsers = async (query, currentUserId, page = 1, limit = 20) => {
     return { users, total, page, totalPages: Math.ceil(total / limit) };
 };
 
-module.exports = { getMyProfile, getUserProfile, updateProfile, searchUsers };
+const getOnlineStatus = async (userId) => {
+    const user = await User.findById(userId).select("lastActive").lean();
+    if (!user) return null;
+    return { lastActive: user.lastActive };
+};
+
+module.exports = { getMyProfile, getUserProfile, updateProfile, searchUsers, getOnlineStatus };

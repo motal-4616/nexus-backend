@@ -22,6 +22,9 @@ router.patch(
 // GET /users/:id
 router.get("/:id", usersController.getUserProfile);
 
+// GET /users/:id/online-status
+router.get("/:id/online-status", usersController.getOnlineStatus);
+
 // GET /users/:id/posts
 const postsController = require("../posts/posts.controller");
 router.get("/:id/posts", postsController.getUserPosts);

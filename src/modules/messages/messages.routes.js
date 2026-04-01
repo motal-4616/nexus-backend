@@ -36,5 +36,6 @@ router.post(
     messagesController.sendMessage,
 );
 router.patch("/:id/seen", messagesController.markSeen);
+router.post("/:id/typing", messagesController.sendTyping);
 
 module.exports = router;

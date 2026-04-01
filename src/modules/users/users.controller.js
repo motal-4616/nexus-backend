@@ -60,4 +60,14 @@ const searchUsers = async (req, res) => {
     }
 };
 
-module.exports = { getMyProfile, getUserProfile, updateProfile, searchUsers };
+const getOnlineStatus = async (req, res) => {
+    try {
+        const result = await usersService.getOnlineStatus(req.params.id);
+        if (!result) return sendError(res, 404, "User not found");
+        sendResponse(res, 200, "Online status retrieved", result);
+    } catch (err) {
+        sendError(res, 500, "Failed to get online status");
+    }
+};
+
+module.exports = { getMyProfile, getUserProfile, updateProfile, searchUsers, getOnlineStatus };
