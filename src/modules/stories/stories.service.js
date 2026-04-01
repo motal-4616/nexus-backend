@@ -1,7 +1,7 @@
 const Story = require("../../models/Story.model");
 const Friendship = require("../../models/Friendship.model");
 
-const createStory = async (authorId, file, duration, audience = "public") => {
+const createStory = async (authorId, file, duration, audience = "public", displayDuration) => {
     if (!file) {
         throw Object.assign(new Error("Story requires an image or video"), {
             status: 400,
@@ -11,6 +11,10 @@ const createStory = async (authorId, file, duration, audience = "public") => {
     const hours = [1, 4, 8, 12, 24].includes(Number(duration))
         ? Number(duration)
         : 24;
+
+    const displaySecs = [5, 10, 15, 30].includes(Number(displayDuration))
+        ? Number(displayDuration)
+        : 7;
 
     const media = {
         url: file.path,
@@ -27,6 +31,7 @@ const createStory = async (authorId, file, duration, audience = "public") => {
         author: authorId,
         media,
         duration: hours,
+        displayDuration: displaySecs,
         expiresAt,
         audience: validAudience,
     });
@@ -80,6 +85,7 @@ const getFeedStories = async (userId) => {
             author: story.author,
             media: story.media,
             duration: story.duration,
+            displayDuration: story.displayDuration || 7,
             expiresAt: story.expiresAt,
             audience: story.audience,
             createdAt: story.createdAt,

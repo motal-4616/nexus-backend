@@ -22,6 +22,11 @@ const storySchema = new mongoose.Schema(
             enum: [1, 4, 8, 12, 24],
             default: 24,
         },
+        displayDuration: {
+            type: Number,
+            enum: [5, 10, 15, 30],
+            default: 7,
+        },
         expiresAt: {
             type: Date,
             required: true,
