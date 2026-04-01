@@ -78,6 +78,23 @@ const validateForgotPassword = [
 ];
 
 const validateResetPassword = [
+    body("email")
+        .trim()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Invalid email address")
+        .normalizeEmail(),
+
+    body("otp")
+        .trim()
+        .notEmpty()
+        .withMessage("OTP is required")
+        .isLength({ min: 6, max: 6 })
+        .withMessage("OTP must be 6 digits")
+        .isNumeric()
+        .withMessage("OTP must be numeric"),
+
     body("password")
         .notEmpty()
         .withMessage("Password is required")
@@ -87,9 +104,31 @@ const validateResetPassword = [
     handleValidationErrors,
 ];
 
+const validateVerifyOTP = [
+    body("email")
+        .trim()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Invalid email address")
+        .normalizeEmail(),
+
+    body("otp")
+        .trim()
+        .notEmpty()
+        .withMessage("OTP is required")
+        .isLength({ min: 6, max: 6 })
+        .withMessage("OTP must be 6 digits")
+        .isNumeric()
+        .withMessage("OTP must be numeric"),
+
+    handleValidationErrors,
+];
+
 module.exports = {
     validateRegister,
     validateLogin,
     validateForgotPassword,
     validateResetPassword,
+    validateVerifyOTP,
 };

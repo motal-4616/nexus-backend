@@ -1,7 +1,13 @@
 const Story = require("../../models/Story.model");
 const Friendship = require("../../models/Friendship.model");
 
-const createStory = async (authorId, file, duration, audience = "public", displayDuration) => {
+const createStory = async (
+    authorId,
+    file,
+    duration,
+    audience = "public",
+    displayDuration,
+) => {
     if (!file) {
         throw Object.assign(new Error("Story requires an image or video"), {
             status: 400,

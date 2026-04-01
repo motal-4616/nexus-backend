@@ -5,7 +5,7 @@ const {
     signRefreshToken,
     verifyToken,
 } = require("../../utils/token.util");
-const { sendResetEmail } = require("../../utils/email.util");
+const { sendOTPEmail } = require("../../utils/email.util");
 const { sendResponse, sendError } = require("../../utils/response.util");
 
 // POST /auth/register
@@ -134,35 +134,32 @@ const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
-        // Always respond 200 to prevent user enumeration
         const user = await User.findOne({ email });
         if (!user) {
             return sendResponse(
                 res,
                 200,
-                "If that email exists, a reset link has been sent",
+                "If that email exists, a reset code has been sent",
             );
         }
 
-        // Generate 32-byte random token, store SHA-256 hash
-        const rawToken = crypto.randomBytes(32).toString("hex");
-        const hashedToken = crypto
+        // Generate 6-digit OTP, store SHA-256 hash
+        const otp = String(crypto.randomInt(100000, 999999));
+        const hashedOTP = crypto
             .createHash("sha256")
-            .update(rawToken)
+            .update(otp)
             .digest("hex");
 
-        user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
+        user.resetOTP = hashedOTP;
+        user.resetOTPExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
         await user.save({ validateBeforeSave: false });
 
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${rawToken}`;
-
-        await sendResetEmail(email, resetLink);
+        await sendOTPEmail(email, otp);
 
         return sendResponse(
             res,
             200,
-            "If that email exists, a reset link has been sent",
+            "If that email exists, a reset code has been sent",
         );
     } catch (err) {
         console.error("forgotPassword error:", err);
@@ -170,29 +167,56 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-// POST /auth/reset-password/:token
-const resetPassword = async (req, res) => {
+// POST /auth/verify-otp
+const verifyOTP = async (req, res) => {
     try {
-        const { token } = req.params;
-        const { password } = req.body;
+        const { email, otp } = req.body;
 
-        const hashedToken = crypto
+        const hashedOTP = crypto
             .createHash("sha256")
-            .update(token)
+            .update(otp)
             .digest("hex");
 
         const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpiry: { $gt: Date.now() },
-        }).select("+resetPasswordToken +resetPasswordExpiry");
+            email,
+            resetOTP: hashedOTP,
+            resetOTPExpiry: { $gt: Date.now() },
+        }).select("+resetOTP +resetOTPExpiry");
 
         if (!user) {
-            return sendError(res, 400, "Reset token is invalid or has expired");
+            return sendError(res, 400, "Invalid or expired OTP");
+        }
+
+        return sendResponse(res, 200, "OTP verified successfully");
+    } catch (err) {
+        console.error("verifyOTP error:", err);
+        return sendError(res, 500, "OTP verification failed");
+    }
+};
+
+// POST /auth/reset-password
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, password } = req.body;
+
+        const hashedOTP = crypto
+            .createHash("sha256")
+            .update(otp)
+            .digest("hex");
+
+        const user = await User.findOne({
+            email,
+            resetOTP: hashedOTP,
+            resetOTPExpiry: { $gt: Date.now() },
+        }).select("+resetOTP +resetOTPExpiry");
+
+        if (!user) {
+            return sendError(res, 400, "Invalid or expired OTP");
         }
 
         user.password = password;
-        user.resetPasswordToken = null;
-        user.resetPasswordExpiry = null;
+        user.resetOTP = null;
+        user.resetOTPExpiry = null;
         user.refreshToken = null; // invalidate all sessions
         await user.save();
 
@@ -213,5 +237,6 @@ module.exports = {
     refreshToken,
     logout,
     forgotPassword,
+    verifyOTP,
     resetPassword,
 };

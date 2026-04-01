@@ -6,6 +6,7 @@ const {
     refreshToken,
     logout,
     forgotPassword,
+    verifyOTP,
     resetPassword,
 } = require("./auth.controller");
 const {
@@ -13,6 +14,7 @@ const {
     validateLogin,
     validateForgotPassword,
     validateResetPassword,
+    validateVerifyOTP,
 } = require("./auth.validator");
 
 const router = express.Router();
@@ -52,7 +54,13 @@ router.post(
     forgotPassword,
 );
 router.post(
-    "/reset-password/:token",
+    "/verify-otp",
+    strictLimiter,
+    validateVerifyOTP,
+    verifyOTP,
+);
+router.post(
+    "/reset-password",
     strictLimiter,
     validateResetPassword,
     resetPassword,
