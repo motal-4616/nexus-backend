@@ -2,20 +2,20 @@
 async function loadViews() {
     const app = document.getElementById("app");
 
-    // Load top-level views: login screen, admin panel shell, modals
-    for (const name of ["login", "admin-panel", "modals"]) {
-        const res = await fetch(`/admin/views/${name}.html`);
-        const html = await res.text();
-        app.insertAdjacentHTML("beforeend", html);
-    }
+    // Fetch all top-level views in parallel
+    const topNames = ["login", "admin-panel", "modals"];
+    const topHTMLs = await Promise.all(
+        topNames.map((name) => fetch(`/admin/views/${name}.html`).then((r) => r.text()))
+    );
+    // Inject all at once — browser renders final state, no intermediate flash
+    app.innerHTML = topHTMLs.join("");
 
-    // Load tab views into the main content area
-    const mainContent = document.getElementById("mainContent");
-    for (const name of ["tab-dashboard", "tab-users", "tab-posts", "tab-reports"]) {
-        const res = await fetch(`/admin/views/${name}.html`);
-        const html = await res.text();
-        mainContent.insertAdjacentHTML("beforeend", html);
-    }
+    // Fetch all tab views in parallel
+    const tabNames = ["tab-dashboard", "tab-users", "tab-posts", "tab-reports"];
+    const tabHTMLs = await Promise.all(
+        tabNames.map((name) => fetch(`/admin/views/${name}.html`).then((r) => r.text()))
+    );
+    document.getElementById("mainContent").innerHTML = tabHTMLs.join("");
 }
 
 // ========== MAIN INIT ==========
@@ -24,10 +24,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const refreshToken = localStorage.getItem("admin_refresh_token");
 
-    // Show admin panel immediately if we have any credentials
+    // Show correct screen before revealing UI (prevents any flash)
     if (token || refreshToken) {
         document.getElementById("loginScreen").classList.add("hidden");
         document.getElementById("adminPanel").classList.remove("hidden");
+    }
+
+    // Remove loading overlay — UI is now in correct state
+    const appLoading = document.getElementById("appLoading");
+    if (appLoading) appLoading.remove();
+
+    if (token || refreshToken) {
         loadDashboard();
         verifyAdmin(); // silent background check
     }

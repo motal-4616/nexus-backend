@@ -50,6 +50,17 @@
         </style>
     </head>
     <body class="bg-gray-50 min-h-screen">
+        <!-- Loading overlay: covers page until views are loaded + token checked -->
+        <div id="appLoading" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#6366f1,#4338ca);display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center;color:white">
+                <svg style="width:40px;height:40px;margin-bottom:12px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <p style="font-size:14px;opacity:0.8">Đang tải...</p>
+            </div>
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
         <div id="app"></div>
 
         <script src="/admin/js/api.js"></script>
