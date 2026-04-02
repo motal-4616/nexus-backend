@@ -94,6 +94,17 @@
         </style>
     </head>
     <body class="bg-gray-50 min-h-screen">
+        <!-- Loading Screen -->
+        <div
+            id="loadingScreen"
+            class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800"
+        >
+            <div class="text-center text-white">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                <p class="text-lg font-medium opacity-80">Đang xác thực...</p>
+            </div>
+        </div>
+
         <!-- Login Screen -->
         <div
             id="loginScreen"
@@ -680,6 +691,9 @@
             // ========== INIT ==========
             document.addEventListener("DOMContentLoaded", () => {
                 if (token || localStorage.getItem("admin_refresh_token")) {
+                    // Hide login, show loading spinner while verifying
+                    document.getElementById("loginScreen").classList.add("hidden");
+                    document.getElementById("loadingScreen").classList.remove("hidden");
                     verifyAdmin();
                 }
 
@@ -824,11 +838,14 @@
                         throw new Error("Not admin");
                     document.getElementById("adminName").textContent =
                         data.data.name;
+                    document.getElementById("loadingScreen").classList.add("hidden");
                     showAdminPanel();
                 } catch {
                     localStorage.removeItem("admin_token");
                     localStorage.removeItem("admin_refresh_token");
                     token = "";
+                    document.getElementById("loadingScreen").classList.add("hidden");
+                    document.getElementById("loginScreen").classList.remove("hidden");
                 }
             }
 
@@ -846,6 +863,7 @@
 
             function showAdminPanel() {
                 document.getElementById("loginScreen").classList.add("hidden");
+                document.getElementById("loadingScreen").classList.add("hidden");
                 document
                     .getElementById("adminPanel")
                     .classList.remove("hidden");
