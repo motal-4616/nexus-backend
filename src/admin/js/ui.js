@@ -60,8 +60,9 @@ function confirmAction(title, message, callback) {
     _modalCallback = callback;
     document.getElementById("confirmModal").classList.remove("hidden");
     document.getElementById("modalConfirmBtn").onclick = async () => {
+        const cb = _modalCallback;
         closeModal();
-        if (_modalCallback) await _modalCallback();
+        if (cb) await cb();
     };
 }
 
