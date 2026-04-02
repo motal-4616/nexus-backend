@@ -30,9 +30,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("adminPanel").classList.remove("hidden");
     }
 
-    // Remove loading overlay — UI is now in correct state
-    const appLoading = document.getElementById("appLoading");
-    if (appLoading) appLoading.remove();
+    // Reveal UI only after correct screen is set — zero flash
+    document.getElementById("app").style.visibility = "";
 
     if (token || refreshToken) {
         loadDashboard();
