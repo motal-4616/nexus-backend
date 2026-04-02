@@ -81,40 +81,31 @@ async function loadUsers() {
 }
 
 async function banUser(id) {
-    console.log("[DEBUG] banUser called, id:", id, "token:", token ? token.substring(0, 20) + "..." : "EMPTY");
     try {
-        const result = await api("PATCH", `/admin/users/${id}/ban`);
-        console.log("[DEBUG] banUser success:", result);
+        await api("PATCH", `/admin/users/${id}/ban`);
         showToast("Đã cấm người dùng", "bg-orange-500");
         loadUsers();
     } catch (err) {
-        console.error("[DEBUG] banUser error:", err);
-        showToast("Lỗi: " + err.message, "bg-red-500");
+        showToast(err.message, "bg-red-500");
     }
 }
 
 async function unbanUser(id) {
-    console.log("[DEBUG] unbanUser called, id:", id);
     try {
-        const result = await api("PATCH", `/admin/users/${id}/unban`);
-        console.log("[DEBUG] unbanUser success:", result);
+        await api("PATCH", `/admin/users/${id}/unban`);
         showToast("Đã mở khóa người dùng", "bg-green-500");
         loadUsers();
     } catch (err) {
-        console.error("[DEBUG] unbanUser error:", err);
-        showToast("Lỗi: " + err.message, "bg-red-500");
+        showToast(err.message, "bg-red-500");
     }
 }
 
 async function deleteUser(id) {
-    console.log("[DEBUG] deleteUser called, id:", id);
     try {
-        const result = await api("DELETE", `/admin/users/${id}`);
-        console.log("[DEBUG] deleteUser success:", result);
+        await api("DELETE", `/admin/users/${id}`);
         showToast("Đã xóa người dùng", "bg-red-500");
         loadUsers();
     } catch (err) {
-        console.error("[DEBUG] deleteUser error:", err);
-        showToast("Lỗi: " + err.message, "bg-red-500");
+        showToast(err.message, "bg-red-500");
     }
 }
