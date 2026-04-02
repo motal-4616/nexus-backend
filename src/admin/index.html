@@ -691,9 +691,11 @@
             // ========== INIT ==========
             document.addEventListener("DOMContentLoaded", () => {
                 if (token || localStorage.getItem("admin_refresh_token")) {
-                    // Hide login, show loading spinner while verifying
+                    // Show admin panel immediately, verify token silently in background
                     document.getElementById("loginScreen").classList.add("hidden");
-                    document.getElementById("loadingScreen").classList.remove("hidden");
+                    document.getElementById("loadingScreen").classList.add("hidden");
+                    document.getElementById("adminPanel").classList.remove("hidden");
+                    loadDashboard();
                     verifyAdmin();
                 }
 
@@ -838,13 +840,12 @@
                         throw new Error("Not admin");
                     document.getElementById("adminName").textContent =
                         data.data.name;
-                    document.getElementById("loadingScreen").classList.add("hidden");
-                    showAdminPanel();
                 } catch {
                     localStorage.removeItem("admin_token");
                     localStorage.removeItem("admin_refresh_token");
                     token = "";
                     document.getElementById("loadingScreen").classList.add("hidden");
+                    document.getElementById("adminPanel").classList.add("hidden");
                     document.getElementById("loginScreen").classList.remove("hidden");
                 }
             }
