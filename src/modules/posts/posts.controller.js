@@ -70,10 +70,14 @@ const deletePost = async (req, res) => {
 const updatePost = async (req, res) => {
     try {
         const { content, audience } = req.body;
-        const post = await postsService.updatePost(req.params.id, req.user._id, {
-            content,
-            audience,
-        });
+        const post = await postsService.updatePost(
+            req.params.id,
+            req.user._id,
+            {
+                content,
+                audience,
+            },
+        );
         if (!post) return sendError(res, 404, "Post not found");
         sendResponse(res, 200, "Post updated", post);
     } catch (err) {
@@ -172,6 +176,21 @@ const searchPosts = async (req, res) => {
     }
 };
 
+const getTaggedPosts = async (req, res) => {
+    try {
+        const { cursor, limit } = req.query;
+        const result = await postsService.getTaggedPosts(
+            req.params.id,
+            cursor || null,
+            parseInt(limit) || 10,
+        );
+        sendResponse(res, 200, "Tagged posts retrieved", result);
+    } catch (err) {
+        console.error("getTaggedPosts error:", err);
+        sendError(res, 500, "Failed to retrieve tagged posts");
+    }
+};
+
 module.exports = {
     createPost,
     getFeed,
@@ -183,4 +202,5 @@ module.exports = {
     getComments,
     getUserPosts,
     searchPosts,
+    getTaggedPosts,
 };

@@ -37,6 +37,13 @@ const postSchema = new mongoose.Schema(
             enum: ["public", "friends", "private"],
             default: "public",
         },
+        taggedUsers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        embedding: [Number],
     },
     {
         timestamps: true,

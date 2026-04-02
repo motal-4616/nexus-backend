@@ -1,6 +1,24 @@
 const Post = require("../../models/Post.model");
 const Comment = require("../../models/Comment.model");
+const User = require("../../models/User.model");
+const Report = require("../../models/Report.model");
 const { createAndPushNotification } = require("../../utils/notification.util");
+const { getEmbedding, moderateContent, cosineSimilarity } = require("../../utils/ai.util");
+
+/**
+ * Parse @username mentions from content and resolve to user IDs
+ */
+const resolveTaggedUsers = async (content) => {
+    if (!content) return [];
+    const mentions = content.match(/@(\w+)/g);
+    if (!mentions || mentions.length === 0) return [];
+    const usernames = [...new Set(mentions.map((m) => m.slice(1)))];
+    const users = await User.find(
+        { username: { $in: usernames } },
+        "_id",
+    ).lean();
+    return users.map((u) => u._id);
+};
 
 const createPost = async (authorId, content, files, audience = "public") => {
     const media = (files || []).map((f) => ({
@@ -18,12 +36,69 @@ const createPost = async (authorId, content, files, audience = "public") => {
     const validAudience = ["public", "friends", "private"].includes(audience)
         ? audience
         : "public";
+
+    const taggedUsers = await resolveTaggedUsers(content);
+
     const post = await Post.create({
         author: authorId,
         content,
         media,
         audience: validAudience,
+        taggedUsers,
     });
+
+    // AI: moderation + embedding (non-blocking)
+    if (content) {
+        (async () => {
+            try {
+                const [modResult, embedding] = await Promise.all([
+                    moderateContent(content),
+                    getEmbedding(content),
+                ]);
+                if (modResult.flagged) {
+                    await Report.create({
+                        reporter: authorId,
+                        targetType: "post",
+                        targetPost: post._id,
+                        reason: "AI detected: " + Object.keys(modResult.categories).filter((k) => modResult.categories[k]).join(", "),
+                        autoFlagged: true,
+                    });
+                }
+                if (embedding) {
+                    await Post.updateOne({ _id: post._id }, { embedding });
+                    // Update user embedding (average of all their post embeddings)
+                    const userPosts = await Post.find(
+                        { author: authorId, embedding: { $exists: true, $ne: [] } },
+                        "embedding",
+                    ).lean();
+                    if (userPosts.length > 0) {
+                        const dim = userPosts[0].embedding.length;
+                        const avg = new Array(dim).fill(0);
+                        for (const p of userPosts) {
+                            for (let i = 0; i < dim; i++) avg[i] += p.embedding[i];
+                        }
+                        for (let i = 0; i < dim; i++) avg[i] /= userPosts.length;
+                        await User.updateOne({ _id: authorId }, { embedding: avg });
+                    }
+                }
+            } catch (err) {
+                console.error("AI post processing error:", err.message);
+            }
+        })();
+    }
+
+    // Notify tagged users
+    for (const taggedId of taggedUsers) {
+        createAndPushNotification({
+            recipientId: taggedId,
+            actorId: authorId,
+            type: "tag",
+            targetRef: post._id,
+            targetModel: "Post",
+            message: "tagged you in a post",
+        }).catch(() => {});
+    }
+
     return Post.findById(post._id).populate("author", "name username avatar");
 };
 
@@ -111,6 +186,7 @@ const updatePost = async (postId, userId, updates) => {
 
     if (updates.content !== undefined) {
         post.content = updates.content;
+        post.taggedUsers = await resolveTaggedUsers(updates.content);
     }
     if (
         updates.audience &&
@@ -166,6 +242,21 @@ const addComment = async (postId, authorId, content) => {
 
     post.commentsCount += 1;
     await post.save();
+
+    // AI: moderate comment (non-blocking)
+    moderateContent(content)
+        .then(async (modResult) => {
+            if (modResult.flagged) {
+                await Report.create({
+                    reporter: authorId,
+                    targetType: "post",
+                    targetPost: postId,
+                    reason: "AI detected comment: " + Object.keys(modResult.categories).filter((k) => modResult.categories[k]).join(", "),
+                    autoFlagged: true,
+                });
+            }
+        })
+        .catch(() => {});
 
     // Notify post author about the comment
     createAndPushNotification({
@@ -231,7 +322,71 @@ const searchPosts = async (query, userId, cursor, limit = 10) => {
         filter._id = { $lt: cursor };
     }
 
-    const posts = await Post.find(filter)
+    const textPosts = await Post.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .populate("author", "name username avatar")
+        .lean();
+
+    const textHasMore = textPosts.length > limit;
+    if (textHasMore) textPosts.pop();
+
+    // Semantic search (non-blocking fallback — merge with text results)
+    let semanticPosts = [];
+    try {
+        const queryEmbedding = await getEmbedding(query);
+        if (queryEmbedding) {
+            const candidates = await Post.find({
+                embedding: { $exists: true, $ne: [] },
+            })
+                .populate("author", "name username avatar")
+                .lean();
+
+            const scored = candidates
+                .map((p) => ({
+                    ...p,
+                    _similarity: cosineSimilarity(queryEmbedding, p.embedding),
+                }))
+                .filter((p) => p._similarity > 0.3)
+                .sort((a, b) => b._similarity - a._similarity)
+                .slice(0, limit);
+
+            semanticPosts = scored;
+        }
+    } catch (_) {}
+
+    // Merge: text results first, then semantic results not already included
+    const seenIds = new Set(textPosts.map((p) => p._id.toString()));
+    const merged = [...textPosts];
+    for (const sp of semanticPosts) {
+        if (!seenIds.has(sp._id.toString())) {
+            merged.push(sp);
+            seenIds.add(sp._id.toString());
+        }
+    }
+
+    const finalPosts = merged.slice(0, limit);
+    const hasMore = textHasMore || merged.length > limit;
+    const nextCursor = textPosts.length > 0 ? textPosts[textPosts.length - 1]._id : null;
+
+    const enriched = finalPosts.map((p) => {
+        const { likes, embedding, _similarity, ...rest } = p;
+        return {
+            ...rest,
+            isLiked: likes?.some((id) => id.toString() === userId.toString()),
+        };
+    });
+
+    return { posts: enriched, hasMore, nextCursor };
+};
+
+const getTaggedPosts = async (userId, cursor, limit = 10) => {
+    const query = { taggedUsers: userId };
+    if (cursor) {
+        query._id = { $lt: cursor };
+    }
+
+    const posts = await Post.find(query)
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .populate("author", "name username avatar")
@@ -241,15 +396,8 @@ const searchPosts = async (query, userId, cursor, limit = 10) => {
     if (hasMore) posts.pop();
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
-    const enriched = posts.map((p) => {
-        const { likes, ...rest } = p;
-        return {
-            ...rest,
-            isLiked: likes?.some((id) => id.toString() === userId.toString()),
-        };
-    });
-
-    return { posts: enriched, hasMore, nextCursor };
+    const cleaned = posts.map(({ likes, ...rest }) => rest);
+    return { posts: cleaned, hasMore, nextCursor };
 };
 
 module.exports = {
@@ -263,4 +411,5 @@ module.exports = {
     getComments,
     getUserPosts,
     searchPosts,
+    getTaggedPosts,
 };

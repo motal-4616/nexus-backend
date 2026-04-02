@@ -70,4 +70,63 @@ const getOnlineStatus = async (req, res) => {
     }
 };
 
-module.exports = { getMyProfile, getUserProfile, updateProfile, searchUsers, getOnlineStatus };
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return sendError(res, 400, "Current and new password are required");
+        }
+        if (newPassword.length < 6) {
+            return sendError(
+                res,
+                400,
+                "New password must be at least 6 characters",
+            );
+        }
+        await usersService.changePassword(
+            req.user._id,
+            currentPassword,
+            newPassword,
+        );
+        sendResponse(res, 200, "Password changed successfully");
+    } catch (err) {
+        console.error("changePassword error:", err);
+        sendError(
+            res,
+            err.status || 500,
+            err.message || "Failed to change password",
+        );
+    }
+};
+
+const deleteAccount = async (req, res) => {
+    try {
+        await usersService.deleteAccount(req.user._id);
+        sendResponse(res, 200, "Account deleted");
+    } catch (err) {
+        console.error("deleteAccount error:", err);
+        sendError(res, 500, "Failed to delete account");
+    }
+};
+
+const getSuggestions = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const suggestions = await usersService.getSuggestions(req.user._id, limit);
+        sendResponse(res, 200, "Suggestions retrieved", suggestions);
+    } catch (err) {
+        console.error("getSuggestions error:", err);
+        sendError(res, 500, "Failed to get suggestions");
+    }
+};
+
+module.exports = {
+    getMyProfile,
+    getUserProfile,
+    updateProfile,
+    searchUsers,
+    getOnlineStatus,
+    changePassword,
+    deleteAccount,
+    getSuggestions,
+};

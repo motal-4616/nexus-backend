@@ -32,7 +32,9 @@ const authMiddleware = async (req, res, next) => {
         // Update lastActive (non-blocking, throttle to once per minute)
         const oneMinAgo = new Date(Date.now() - 60000);
         if (!user.lastActive || user.lastActive < oneMinAgo) {
-            User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch(() => {});
+            User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch(
+                () => {},
+            );
         }
 
         next();

@@ -32,6 +32,10 @@ const reportSchema = new mongoose.Schema(
             enum: ["pending", "resolved", "dismissed"],
             default: "pending",
         },
+        autoFlagged: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true },
 );

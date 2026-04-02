@@ -9,6 +9,9 @@ router.use(authMiddleware);
 // GET /users/search?q=...&page=1
 router.get("/search", usersController.searchUsers);
 
+// GET /users/suggestions
+router.get("/suggestions", usersController.getSuggestions);
+
 // GET /users/me
 router.get("/me", usersController.getMyProfile);
 
@@ -19,6 +22,12 @@ router.patch(
     usersController.updateProfile,
 );
 
+// PATCH /users/me/password
+router.patch("/me/password", usersController.changePassword);
+
+// DELETE /users/me
+router.delete("/me", usersController.deleteAccount);
+
 // GET /users/:id
 router.get("/:id", usersController.getUserProfile);
 
@@ -28,5 +37,8 @@ router.get("/:id/online-status", usersController.getOnlineStatus);
 // GET /users/:id/posts
 const postsController = require("../posts/posts.controller");
 router.get("/:id/posts", postsController.getUserPosts);
+
+// GET /users/:id/tagged-posts
+router.get("/:id/tagged-posts", postsController.getTaggedPosts);
 
 module.exports = router;
