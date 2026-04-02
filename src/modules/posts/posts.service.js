@@ -102,6 +102,29 @@ const deletePost = async (postId, userId) => {
     return true;
 };
 
+const updatePost = async (postId, userId, updates) => {
+    const post = await Post.findById(postId);
+    if (!post) return null;
+    if (post.author.toString() !== userId.toString()) {
+        throw Object.assign(new Error("Not authorized"), { status: 403 });
+    }
+
+    if (updates.content !== undefined) {
+        post.content = updates.content;
+    }
+    if (
+        updates.audience &&
+        ["public", "friends", "private"].includes(updates.audience)
+    ) {
+        post.audience = updates.audience;
+    }
+
+    await post.save();
+    return Post.findById(post._id)
+        .populate("author", "name username avatar")
+        .lean();
+};
+
 const toggleLike = async (postId, userId) => {
     const post = await Post.findById(postId);
     if (!post) return null;
@@ -234,6 +257,7 @@ module.exports = {
     getFeed,
     getPostById,
     deletePost,
+    updatePost,
     toggleLike,
     addComment,
     getComments,

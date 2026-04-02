@@ -24,6 +24,7 @@ router.get("/:id", postsController.getPostById);
 
 // DELETE /posts/:id — delete post (author only)
 router.delete("/:id", postsController.deletePost);
+router.put("/:id", postsController.updatePost);
 
 // POST /posts/:id/like — toggle like/unlike
 router.post("/:id/like", postsController.toggleLike);

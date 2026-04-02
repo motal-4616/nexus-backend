@@ -67,6 +67,25 @@ const deletePost = async (req, res) => {
     }
 };
 
+const updatePost = async (req, res) => {
+    try {
+        const { content, audience } = req.body;
+        const post = await postsService.updatePost(req.params.id, req.user._id, {
+            content,
+            audience,
+        });
+        if (!post) return sendError(res, 404, "Post not found");
+        sendResponse(res, 200, "Post updated", post);
+    } catch (err) {
+        console.error("updatePost error:", err);
+        sendError(
+            res,
+            err.status || 500,
+            err.message || "Failed to update post",
+        );
+    }
+};
+
 const toggleLike = async (req, res) => {
     try {
         const result = await postsService.toggleLike(
@@ -158,6 +177,7 @@ module.exports = {
     getFeed,
     getPostById,
     deletePost,
+    updatePost,
     toggleLike,
     addComment,
     getComments,
