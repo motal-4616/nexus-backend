@@ -63,6 +63,9 @@ async function api(method, path, body = null) {
 
     const data = await res.json();
 
+    // DEBUG: log every API call result
+    console.log(`[API] ${method} ${path} → ${res.status}`, data);
+
     if (res.status === 401 && path !== "/auth/login") {
         handleLogout();
         throw new Error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại");
