@@ -1,6 +1,7 @@
 // ========== TAB SWITCH ==========
 function switchTab(tab) {
     currentTab = tab;
+    localStorage.setItem("admin_tab", tab);
     document.querySelectorAll(".tab-content").forEach((el) => el.classList.add("hidden"));
     document.querySelectorAll(".sidebar-link").forEach((el) => {
         el.classList.remove("tab-active");

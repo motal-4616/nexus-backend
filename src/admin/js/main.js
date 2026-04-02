@@ -34,7 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("app").style.visibility = "";
 
     if (token || refreshToken) {
-        loadDashboard();
+        const savedTab = localStorage.getItem("admin_tab") || "dashboard";
+        switchTab(savedTab);
         verifyAdmin(); // silent background check
     }
 
