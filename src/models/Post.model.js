@@ -44,6 +44,7 @@ const postSchema = new mongoose.Schema(
             },
         ],
         embedding: [Number],
+        isHidden: { type: Boolean, default: false },
     },
     {
         timestamps: true,

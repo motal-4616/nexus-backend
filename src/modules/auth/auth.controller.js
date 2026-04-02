@@ -61,6 +61,14 @@ const login = async (req, res) => {
             return sendError(res, 401, "Invalid email or password");
         }
 
+        if (user.isBanned) {
+            return sendError(
+                res,
+                403,
+                "Tài khoản của bạn đã bị khóa do vi phạm chính sách cộng đồng",
+            );
+        }
+
         const accessToken = signAccessToken(user._id);
         const refreshToken = signRefreshToken(user._id);
 

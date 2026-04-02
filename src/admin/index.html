@@ -786,7 +786,7 @@
 
             async function verifyAdmin() {
                 try {
-                    const data = await api("GET", "/users/profile");
+                    const data = await api("GET", "/users/me");
                     if (data.data.role !== "admin")
                         throw new Error("Not admin");
                     document.getElementById("adminName").textContent =
@@ -1168,8 +1168,8 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${r.targetType === "post" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}">
-                            ${r.targetType === "post" ? '<i class="fas fa-newspaper mr-1"></i>Bài viết' : '<i class="fas fa-user mr-1"></i>Người dùng'}
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${r.targetType === "post" ? "bg-blue-50 text-blue-600" : r.targetType === "comment" ? "bg-yellow-50 text-yellow-700" : "bg-purple-50 text-purple-600"}">
+                            ${r.targetType === "post" ? '<i class="fas fa-newspaper mr-1"></i>Bài viết' : r.targetType === "comment" ? '<i class="fas fa-comment mr-1"></i>Bình luận' : '<i class="fas fa-user mr-1"></i>Người dùng'}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">
@@ -1179,7 +1179,9 @@
                                       r.targetPost?.content?.substring(0, 50) ||
                                           "Đã xóa",
                                   )
-                                : escapeHtml(r.targetUser?.name || "Đã xóa")
+                                : r.targetType === "comment"
+                                  ? escapeHtml(r.targetComment?.content?.substring(0, 50) || "Đã xóa")
+                                  : escapeHtml(r.targetUser?.name || "Đã xóa")
                         }
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">${escapeHtml(r.reason || "")}</td>
@@ -1194,7 +1196,7 @@
                         }">
                             ${r.status === "pending" ? "Chờ xử lý" : r.status === "resolved" ? "Đã giải quyết" : "Đã bỏ qua"}
                         </span>
-                        ${r.autoFlagged ? '<span class="text-xs font-medium px-2 py-1 rounded-full bg-violet-100 text-violet-700"><i class="fas fa-robot mr-1"></i>AI</span>' : ''}
+                        ${r.autoFlagged ? '<span class="text-xs font-medium px-2 py-1 rounded-full bg-violet-100 text-violet-700"><i class="fas fa-robot mr-1"></i>AI</span>' : ""}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">${formatDate(r.createdAt)}</td>

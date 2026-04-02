@@ -104,6 +104,7 @@ const getReports = async (page = 1, limit = 20, status = "") => {
             .populate("reporter", "name username avatar")
             .populate("targetPost", "content media author")
             .populate("targetUser", "name username avatar")
+            .populate("targetComment", "content author")
             .lean(),
         Report.countDocuments(filter),
     ]);

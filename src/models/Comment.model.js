@@ -18,6 +18,7 @@ const commentSchema = new mongoose.Schema(
             required: [true, "Comment content is required"],
             maxlength: [1000, "Comment cannot exceed 1000 characters"],
         },
+        isHidden: { type: Boolean, default: false },
     },
     {
         timestamps: true,

@@ -9,7 +9,7 @@ const reportSchema = new mongoose.Schema(
         },
         targetType: {
             type: String,
-            enum: ["post", "user"],
+            enum: ["post", "user", "comment"],
             required: true,
         },
         targetPost: {
@@ -20,6 +20,11 @@ const reportSchema = new mongoose.Schema(
         targetUser: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
+            default: null,
+        },
+        targetComment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Comment",
             default: null,
         },
         reason: {

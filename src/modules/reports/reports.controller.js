@@ -20,7 +20,8 @@ const createReport = async (req, res) => {
 
         if (targetType === "post") reportData.targetPost = targetId;
         else if (targetType === "user") reportData.targetUser = targetId;
-        else return sendError(res, 400, "targetType must be 'post' or 'user'");
+        else if (targetType === "comment") reportData.targetComment = targetId;
+        else return sendError(res, 400, "Invalid targetType");
 
         const report = await Report.create(reportData);
         sendResponse(res, 201, "Report submitted", report);

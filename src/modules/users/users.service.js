@@ -138,13 +138,19 @@ const getSuggestions = async (userId, limit = 10) => {
     const { cosineSimilarity } = require("../../utils/ai.util");
 
     const currentUser = await User.findById(userId).lean();
-    if (!currentUser || !currentUser.embedding || currentUser.embedding.length === 0) {
+    if (
+        !currentUser ||
+        !currentUser.embedding ||
+        currentUser.embedding.length === 0
+    ) {
         // Fallback: return random non-friend users
         const friendships = await Friendship.find({
             $or: [{ requester: userId }, { recipient: userId }],
         }).lean();
         const friendIds = friendships.map((f) =>
-            f.requester.toString() === userId.toString() ? f.recipient : f.requester,
+            f.requester.toString() === userId.toString()
+                ? f.recipient
+                : f.requester,
         );
         friendIds.push(userId);
 
@@ -160,7 +166,9 @@ const getSuggestions = async (userId, limit = 10) => {
         $or: [{ requester: userId }, { recipient: userId }],
     }).lean();
     const excludeIds = friendships.map((f) =>
-        f.requester.toString() === userId.toString() ? f.recipient : f.requester,
+        f.requester.toString() === userId.toString()
+            ? f.recipient
+            : f.requester,
     );
     excludeIds.push(userId);
 

@@ -112,7 +112,10 @@ const deleteAccount = async (req, res) => {
 const getSuggestions = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
-        const suggestions = await usersService.getSuggestions(req.user._id, limit);
+        const suggestions = await usersService.getSuggestions(
+            req.user._id,
+            limit,
+        );
         sendResponse(res, 200, "Suggestions retrieved", suggestions);
     } catch (err) {
         console.error("getSuggestions error:", err);

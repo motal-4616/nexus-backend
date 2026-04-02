@@ -21,7 +21,8 @@ const getEmbedding = async (text) => {
  * Check content with OpenAI Moderation API (free)
  */
 const moderateContent = async (text) => {
-    if (!openai || !text || !text.trim()) return { flagged: false, categories: {} };
+    if (!openai || !text || !text.trim())
+        return { flagged: false, categories: {} };
     try {
         const res = await openai.moderations.create({
             model: "omni-moderation-latest",

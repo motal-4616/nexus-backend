@@ -74,6 +74,7 @@ const userSchema = new mongoose.Schema(
             default: Date.now,
         },
         embedding: [Number],
+        violationCount: { type: Number, default: 0 },
     },
     {
         timestamps: true,

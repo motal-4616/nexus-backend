@@ -3,7 +3,14 @@ const Comment = require("../../models/Comment.model");
 const User = require("../../models/User.model");
 const Report = require("../../models/Report.model");
 const { createAndPushNotification } = require("../../utils/notification.util");
-const { getEmbedding, moderateContent, cosineSimilarity } = require("../../utils/ai.util");
+const {
+    getEmbedding,
+    moderateContent,
+    cosineSimilarity,
+} = require("../../utils/ai.util");
+const pusher = require("../../config/pusher");
+
+const VIOLATION_LIMIT = 3;
 
 /**
  * Parse @username mentions from content and resolve to user IDs
@@ -56,29 +63,60 @@ const createPost = async (authorId, content, files, audience = "public") => {
                     getEmbedding(content),
                 ]);
                 if (modResult.flagged) {
+                    await Post.updateOne({ _id: post._id }, { isHidden: true });
                     await Report.create({
                         reporter: authorId,
                         targetType: "post",
                         targetPost: post._id,
-                        reason: "AI detected: " + Object.keys(modResult.categories).filter((k) => modResult.categories[k]).join(", "),
+                        reason:
+                            "AI detected: " +
+                            Object.keys(modResult.categories)
+                                .filter((k) => modResult.categories[k])
+                                .join(", "),
                         autoFlagged: true,
                     });
+                    const updated = await User.findByIdAndUpdate(
+                        authorId,
+                        { $inc: { violationCount: 1 } },
+                        { new: true },
+                    );
+                    if (updated.violationCount >= VIOLATION_LIMIT) {
+                        await User.findByIdAndUpdate(authorId, {
+                            isBanned: true,
+                            refreshToken: null,
+                        });
+                        pusher.trigger(
+                            `private-user-${authorId}`,
+                            "account-banned",
+                            {
+                                reason: "Tài khoản bị khóa do vi phạm chính sách nhiều lần",
+                            },
+                        );
+                    }
                 }
                 if (embedding) {
                     await Post.updateOne({ _id: post._id }, { embedding });
                     // Update user embedding (average of all their post embeddings)
                     const userPosts = await Post.find(
-                        { author: authorId, embedding: { $exists: true, $ne: [] } },
+                        {
+                            author: authorId,
+                            embedding: { $exists: true, $ne: [] },
+                        },
                         "embedding",
                     ).lean();
                     if (userPosts.length > 0) {
                         const dim = userPosts[0].embedding.length;
                         const avg = new Array(dim).fill(0);
                         for (const p of userPosts) {
-                            for (let i = 0; i < dim; i++) avg[i] += p.embedding[i];
+                            for (let i = 0; i < dim; i++)
+                                avg[i] += p.embedding[i];
                         }
-                        for (let i = 0; i < dim; i++) avg[i] /= userPosts.length;
-                        await User.updateOne({ _id: authorId }, { embedding: avg });
+                        for (let i = 0; i < dim; i++)
+                            avg[i] /= userPosts.length;
+                        await User.updateOne(
+                            { _id: authorId },
+                            { embedding: avg },
+                        );
                     }
                 }
             } catch (err) {
@@ -123,6 +161,7 @@ const getFeed = async (userId, cursor, limit = 10) => {
             { audience: "friends", author: { $in: [...friendIds, userId] } },
             { audience: "private", author: userId },
         ],
+        isHidden: { $ne: true },
     };
     if (cursor) {
         query._id = { $lt: cursor };
@@ -247,13 +286,36 @@ const addComment = async (postId, authorId, content) => {
     moderateContent(content)
         .then(async (modResult) => {
             if (modResult.flagged) {
+                await Comment.updateOne({ _id: comment._id }, { isHidden: true });
                 await Report.create({
                     reporter: authorId,
-                    targetType: "post",
-                    targetPost: postId,
-                    reason: "AI detected comment: " + Object.keys(modResult.categories).filter((k) => modResult.categories[k]).join(", "),
+                    targetType: "comment",
+                    targetComment: comment._id,
+                    reason:
+                        "AI detected comment: " +
+                        Object.keys(modResult.categories)
+                            .filter((k) => modResult.categories[k])
+                            .join(", "),
                     autoFlagged: true,
                 });
+                const updated = await User.findByIdAndUpdate(
+                    authorId,
+                    { $inc: { violationCount: 1 } },
+                    { new: true },
+                );
+                if (updated.violationCount >= VIOLATION_LIMIT) {
+                    await User.findByIdAndUpdate(authorId, {
+                        isBanned: true,
+                        refreshToken: null,
+                    });
+                    pusher.trigger(
+                        `private-user-${authorId}`,
+                        "account-banned",
+                        {
+                            reason: "Tài khoản bị khóa do vi phạm chính sách nhiều lần",
+                        },
+                    );
+                }
             }
         })
         .catch(() => {});
@@ -275,7 +337,7 @@ const addComment = async (postId, authorId, content) => {
 };
 
 const getComments = async (postId, cursor, limit = 20) => {
-    const query = { post: postId };
+    const query = { post: postId, isHidden: { $ne: true } };
     if (cursor) {
         query._id = { $lt: cursor };
     }
@@ -367,7 +429,8 @@ const searchPosts = async (query, userId, cursor, limit = 10) => {
 
     const finalPosts = merged.slice(0, limit);
     const hasMore = textHasMore || merged.length > limit;
-    const nextCursor = textPosts.length > 0 ? textPosts[textPosts.length - 1]._id : null;
+    const nextCursor =
+        textPosts.length > 0 ? textPosts[textPosts.length - 1]._id : null;
 
     const enriched = finalPosts.map((p) => {
         const { likes, embedding, _similarity, ...rest } = p;
