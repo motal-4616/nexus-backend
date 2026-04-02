@@ -19,5 +19,6 @@ router.get("/reports", ctrl.getReports);
 router.patch("/reports/:id/resolve", ctrl.resolveReport);
 router.patch("/reports/:id/dismiss", ctrl.dismissReport);
 router.delete("/reports/:id/delete-post", ctrl.deleteReportedPost);
+router.delete("/reports/:id/delete-comment", ctrl.deleteReportedComment);
 
 module.exports = router;

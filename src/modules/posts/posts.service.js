@@ -75,6 +75,16 @@ const createPost = async (authorId, content, files, audience = "public") => {
                                 .join(", "),
                         autoFlagged: true,
                     });
+                    // Notify user about violation
+                    createAndPushNotification({
+                        recipientId: authorId,
+                        actorId: authorId,
+                        type: "warning",
+                        targetRef: post._id,
+                        targetModel: "Post",
+                        message:
+                            "Bài viết của bạn đã bị ẩn do vi phạm nội dung",
+                    }).catch(() => {});
                     const updated = await User.findByIdAndUpdate(
                         authorId,
                         { $inc: { violationCount: 1 } },
@@ -301,7 +311,10 @@ const addComment = async (postId, authorId, content) => {
     moderateContent(content)
         .then(async (modResult) => {
             if (modResult.flagged) {
-                await Comment.updateOne({ _id: comment._id }, { isHidden: true });
+                await Comment.updateOne(
+                    { _id: comment._id },
+                    { isHidden: true },
+                );
                 await Report.create({
                     reporter: authorId,
                     targetType: "comment",
@@ -313,6 +326,15 @@ const addComment = async (postId, authorId, content) => {
                             .join(", "),
                     autoFlagged: true,
                 });
+                // Notify user about violation
+                createAndPushNotification({
+                    recipientId: authorId,
+                    actorId: authorId,
+                    type: "warning",
+                    targetRef: post._id,
+                    targetModel: "Post",
+                    message: "Bình luận của bạn đã bị ẩn do vi phạm nội dung",
+                }).catch(() => {});
                 const updated = await User.findByIdAndUpdate(
                     authorId,
                     { $inc: { violationCount: 1 } },

@@ -24,7 +24,14 @@ const getDashboard = async () => {
     };
 };
 
-const getUsers = async (page = 1, limit = 20, search = "", status = "", role = "", sort = "") => {
+const getUsers = async (
+    page = 1,
+    limit = 20,
+    search = "",
+    status = "",
+    role = "",
+    sort = "",
+) => {
     const filter = {};
     if (search) {
         const regex = new RegExp(
@@ -43,11 +50,7 @@ const getUsers = async (page = 1, limit = 20, search = "", status = "", role = "
 
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
-        User.find(filter)
-            .sort(sortOption)
-            .skip(skip)
-            .limit(limit)
-            .lean(),
+        User.find(filter).sort(sortOption).skip(skip).limit(limit).lean(),
         User.countDocuments(filter),
     ]);
     return { users, total, page, totalPages: Math.ceil(total / limit) };
@@ -81,7 +84,14 @@ const deleteUser = async (userId) => {
     return User.findByIdAndDelete(userId);
 };
 
-const getPosts = async (page = 1, limit = 20, search = "", type = "", audience = "", sort = "") => {
+const getPosts = async (
+    page = 1,
+    limit = 20,
+    search = "",
+    type = "",
+    audience = "",
+    sort = "",
+) => {
     const filter = {};
     if (search) {
         const regex = new RegExp(
@@ -91,7 +101,9 @@ const getPosts = async (page = 1, limit = 20, search = "", type = "", audience =
         // Search by content OR by author name/username
         const matchingUsers = await User.find({
             $or: [{ name: regex }, { username: regex }],
-        }).select("_id").lean();
+        })
+            .select("_id")
+            .lean();
         const userIds = matchingUsers.map((u) => u._id);
         filter.$or = [{ content: regex }];
         if (userIds.length > 0) filter.$or.push({ author: { $in: userIds } });
@@ -107,15 +119,31 @@ const getPosts = async (page = 1, limit = 20, search = "", type = "", audience =
     if (sort === "authorName") {
         const pipeline = [
             { $match: filter },
-            { $lookup: { from: "users", localField: "author", foreignField: "_id", as: "_author" } },
-            { $addFields: { _authorName: { $toLower: { $arrayElemAt: ["$_author.name", 0] } } } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "_author",
+                },
+            },
+            {
+                $addFields: {
+                    _authorName: {
+                        $toLower: { $arrayElemAt: ["$_author.name", 0] },
+                    },
+                },
+            },
             { $sort: { _authorName: 1 } },
             { $skip: skip },
             { $limit: limit },
             { $project: { _author: 0, _authorName: 0 } },
         ];
         let posts = await Post.aggregate(pipeline);
-        posts = await Post.populate(posts, { path: "author", select: "name username avatar" });
+        posts = await Post.populate(posts, {
+            path: "author",
+            select: "name username avatar",
+        });
         return { posts, total, page, totalPages: Math.ceil(total / limit) };
     }
 
@@ -138,7 +166,14 @@ const deletePost = async (postId) => {
     return Post.findByIdAndDelete(postId);
 };
 
-const getReports = async (page = 1, limit = 20, status = "", targetType = "", autoFlagged = "", sort = "") => {
+const getReports = async (
+    page = 1,
+    limit = 20,
+    status = "",
+    targetType = "",
+    autoFlagged = "",
+    sort = "",
+) => {
     const filter = {};
     if (status) filter.status = status;
     if (targetType) filter.targetType = targetType;
@@ -201,6 +236,22 @@ const deleteReportedPost = async (reportId) => {
     return report;
 };
 
+const deleteReportedComment = async (reportId) => {
+    const report = await Report.findById(reportId);
+    if (!report || !report.targetComment) return null;
+    // Delete the comment and decrement post's commentsCount
+    const comment = await Comment.findByIdAndDelete(report.targetComment);
+    if (comment) {
+        await Post.updateOne(
+            { _id: comment.post },
+            { $inc: { commentsCount: -1 } },
+        );
+    }
+    report.status = "resolved";
+    await report.save();
+    return report;
+};
+
 module.exports = {
     getDashboard,
     getUsers,
@@ -213,4 +264,5 @@ module.exports = {
     resolveReport,
     dismissReport,
     deleteReportedPost,
+    deleteReportedComment,
 };

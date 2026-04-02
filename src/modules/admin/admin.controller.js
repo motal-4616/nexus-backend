@@ -12,8 +12,22 @@ const getDashboard = async (req, res) => {
 
 const getUsers = async (req, res) => {
     try {
-        const { page = 1, limit = 20, search = "", status = "", role = "", sort = "" } = req.query;
-        const data = await adminService.getUsers(+page, +limit, search, status, role, sort);
+        const {
+            page = 1,
+            limit = 20,
+            search = "",
+            status = "",
+            role = "",
+            sort = "",
+        } = req.query;
+        const data = await adminService.getUsers(
+            +page,
+            +limit,
+            search,
+            status,
+            role,
+            sort,
+        );
         sendResponse(res, 200, "Users list", data);
     } catch (err) {
         sendError(res, 500, err.message);
@@ -52,8 +66,22 @@ const deleteUser = async (req, res) => {
 
 const getPosts = async (req, res) => {
     try {
-        const { page = 1, limit = 20, search = "", type = "", audience = "", sort = "" } = req.query;
-        const data = await adminService.getPosts(+page, +limit, search, type, audience, sort);
+        const {
+            page = 1,
+            limit = 20,
+            search = "",
+            type = "",
+            audience = "",
+            sort = "",
+        } = req.query;
+        const data = await adminService.getPosts(
+            +page,
+            +limit,
+            search,
+            type,
+            audience,
+            sort,
+        );
         sendResponse(res, 200, "Posts list", data);
     } catch (err) {
         sendError(res, 500, err.message);
@@ -72,8 +100,22 @@ const deletePost = async (req, res) => {
 
 const getReports = async (req, res) => {
     try {
-        const { page = 1, limit = 20, status = "", targetType = "", autoFlagged = "", sort = "" } = req.query;
-        const data = await adminService.getReports(+page, +limit, status, targetType, autoFlagged, sort);
+        const {
+            page = 1,
+            limit = 20,
+            status = "",
+            targetType = "",
+            autoFlagged = "",
+            sort = "",
+        } = req.query;
+        const data = await adminService.getReports(
+            +page,
+            +limit,
+            status,
+            targetType,
+            autoFlagged,
+            sort,
+        );
         sendResponse(res, 200, "Reports list", data);
     } catch (err) {
         sendError(res, 500, err.message);
@@ -110,6 +152,16 @@ const deleteReportedPost = async (req, res) => {
     }
 };
 
+const deleteReportedComment = async (req, res) => {
+    try {
+        const report = await adminService.deleteReportedComment(req.params.id);
+        if (!report) return sendError(res, 404, "Report or comment not found");
+        sendResponse(res, 200, "Reported comment deleted and report resolved");
+    } catch (err) {
+        sendError(res, 500, err.message);
+    }
+};
+
 module.exports = {
     getDashboard,
     getUsers,
@@ -122,4 +174,5 @@ module.exports = {
     resolveReport,
     dismissReport,
     deleteReportedPost,
+    deleteReportedComment,
 };
