@@ -1,0 +1,33 @@
+<div id="tab-users" class="tab-content hidden fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Người dùng</h1>
+            <p class="text-gray-500 mt-1">Quản lý tài khoản người dùng</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="userSearch" placeholder="Tìm kiếm người dùng..."
+                    class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-72" />
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Người dùng</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vai trò</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                    <th class="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="usersPagination" class="flex items-center justify-between mt-4"></div>
+</div>

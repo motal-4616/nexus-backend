@@ -1,0 +1,49 @@
+<div id="adminPanel" class="hidden min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-20">
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-gray-800">Nexus Admin</h2>
+                    <p class="text-xs text-gray-400" id="adminName">Admin</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600 tab-active">
+                <i class="fas fa-chart-pie w-5 text-center"></i>
+                <span class="font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchTab('users')" id="nav-users"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-users w-5 text-center"></i>
+                <span class="font-medium">Người dùng</span>
+            </button>
+            <button onclick="switchTab('posts')" id="nav-posts"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-newspaper w-5 text-center"></i>
+                <span class="font-medium">Bài viết</span>
+            </button>
+            <button onclick="switchTab('reports')" id="nav-reports"
+                class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-600 hover:bg-primary-50 hover:text-primary-600">
+                <i class="fas fa-flag w-5 text-center"></i>
+                <span class="font-medium">Báo cáo</span>
+                <span id="reportBadge" class="hidden ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full"></span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <button onclick="handleLogout()"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition">
+                <i class="fas fa-right-from-bracket w-5 text-center"></i>
+                <span class="font-medium">Đăng xuất</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content (tabs injected here by main.js) -->
+    <main id="mainContent" class="flex-1 ml-64 p-8"></main>
+</div>

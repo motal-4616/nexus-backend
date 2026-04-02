@@ -1,5 +1,27 @@
+// ========== VIEW LOADER ==========
+async function loadViews() {
+    const app = document.getElementById("app");
+
+    // Load top-level views: login screen, admin panel shell, modals
+    for (const name of ["login", "admin-panel", "modals"]) {
+        const res = await fetch(`/admin/views/${name}.html`);
+        const html = await res.text();
+        app.insertAdjacentHTML("beforeend", html);
+    }
+
+    // Load tab views into the main content area
+    const mainContent = document.getElementById("mainContent");
+    for (const name of ["tab-dashboard", "tab-users", "tab-posts", "tab-reports"]) {
+        const res = await fetch(`/admin/views/${name}.html`);
+        const html = await res.text();
+        mainContent.insertAdjacentHTML("beforeend", html);
+    }
+}
+
 // ========== MAIN INIT ==========
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadViews();
+
     const refreshToken = localStorage.getItem("admin_refresh_token");
 
     // Show admin panel immediately if we have any credentials

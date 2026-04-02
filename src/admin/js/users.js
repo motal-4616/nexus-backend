@@ -5,16 +5,20 @@ async function loadUsers() {
     if (search) params.set("search", search);
 
     const tbody = document.getElementById("usersTableBody");
-    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...</td></tr>';
+    tbody.innerHTML =
+        '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...</td></tr>';
 
     try {
         const data = await api("GET", "/admin/users?" + params);
         const { users, total, totalPages: pages } = data.data;
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Không tìm thấy người dùng nào</td></tr>';
+            tbody.innerHTML =
+                '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Không tìm thấy người dùng nào</td></tr>';
         } else {
-            tbody.innerHTML = users.map((u) => `
+            tbody.innerHTML = users
+                .map(
+                    (u) => `
                 <tr class="table-row border-b border-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
@@ -38,13 +42,16 @@ async function loadUsers() {
                     <td class="px-6 py-4 text-sm text-gray-500">${formatDate(u.createdAt)}</td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            ${u.role !== "admin" ? `
-                                ${u.isBanned
-                                    ? `<button onclick="confirmAction('Mở khóa người dùng', 'Bạn muốn mở khóa tài khoản ${escapeAttr(u.name)}?', function(){ return unbanUser('${u._id}'); })"
+                            ${
+                                u.role !== "admin"
+                                    ? `
+                                ${
+                                    u.isBanned
+                                        ? `<button onclick="confirmAction('Mở khóa người dùng', 'Bạn muốn mở khóa tài khoản ${escapeAttr(u.name)}?', function(){ return unbanUser('${u._id}'); })"
                                         class="btn-action px-3 py-1.5 text-xs font-medium bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Mở khóa">
                                         <i class="fas fa-unlock"></i>
                                        </button>`
-                                    : `<button onclick="confirmAction('Cấm người dùng', 'Bạn muốn cấm tài khoản ${escapeAttr(u.name)}?', function(){ return banUser('${u._id}'); })"
+                                        : `<button onclick="confirmAction('Cấm người dùng', 'Bạn muốn cấm tài khoản ${escapeAttr(u.name)}?', function(){ return banUser('${u._id}'); })"
                                         class="btn-action px-3 py-1.5 text-xs font-medium bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100" title="Cấm">
                                         <i class="fas fa-ban"></i>
                                        </button>`
@@ -53,11 +60,15 @@ async function loadUsers() {
                                     class="btn-action px-3 py-1.5 text-xs font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Xóa">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            ` : '<span class="text-xs text-gray-400">Admin</span>'}
+                            `
+                                    : '<span class="text-xs text-gray-400">Admin</span>'
+                            }
                         </div>
                     </td>
                 </tr>
-            `).join("");
+            `,
+                )
+                .join("");
         }
 
         renderPagination("usersPagination", usersPage, pages, total, (p) => {
