@@ -2,6 +2,8 @@ const User = require("../../models/User.model");
 const Post = require("../../models/Post.model");
 const Report = require("../../models/Report.model");
 const Comment = require("../../models/Comment.model");
+const Friendship = require("../../models/Friendship.model");
+const Notification = require("../../models/Notification.model");
 
 const getDashboard = async () => {
     const [totalUsers, totalPosts, totalReports, pendingReports, bannedUsers] =
@@ -22,7 +24,7 @@ const getDashboard = async () => {
     };
 };
 
-const getUsers = async (page = 1, limit = 20, search = "") => {
+const getUsers = async (page = 1, limit = 20, search = "", status = "", role = "", sort = "") => {
     const filter = {};
     if (search) {
         const regex = new RegExp(
@@ -31,10 +33,18 @@ const getUsers = async (page = 1, limit = 20, search = "") => {
         );
         filter.$or = [{ name: regex }, { username: regex }, { email: regex }];
     }
+    if (status === "banned") filter.isBanned = true;
+    else if (status === "active") filter.isBanned = { $ne: true };
+    if (role) filter.role = role;
+
+    let sortOption = { createdAt: -1 };
+    if (sort === "oldest") sortOption = { createdAt: 1 };
+    else if (sort === "name") sortOption = { name: 1 };
+
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
         User.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .lean(),
@@ -62,28 +72,64 @@ const unbanUser = async (userId) => {
 const deleteUser = async (userId) => {
     await Post.deleteMany({ author: userId });
     await Comment.deleteMany({ author: userId });
+    await Friendship.deleteMany({
+        $or: [{ requester: userId }, { recipient: userId }],
+    });
+    await Notification.deleteMany({
+        $or: [{ recipient: userId }, { actor: userId }],
+    });
     return User.findByIdAndDelete(userId);
 };
 
-const getPosts = async (page = 1, limit = 20, search = "") => {
+const getPosts = async (page = 1, limit = 20, search = "", type = "", audience = "", sort = "") => {
     const filter = {};
     if (search) {
         const regex = new RegExp(
             search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
             "i",
         );
-        filter.content = regex;
+        // Search by content OR by author name/username
+        const matchingUsers = await User.find({
+            $or: [{ name: regex }, { username: regex }],
+        }).select("_id").lean();
+        const userIds = matchingUsers.map((u) => u._id);
+        filter.$or = [{ content: regex }];
+        if (userIds.length > 0) filter.$or.push({ author: { $in: userIds } });
     }
+    if (type === "media") filter["media.0"] = { $exists: true };
+    else if (type === "text") filter.media = { $size: 0 };
+    if (audience) filter.audience = audience;
+
     const skip = (page - 1) * limit;
-    const [posts, total] = await Promise.all([
-        Post.find(filter)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate("author", "name username avatar")
-            .lean(),
-        Post.countDocuments(filter),
-    ]);
+    const total = await Post.countDocuments(filter);
+
+    // Sort by author name requires aggregation
+    if (sort === "authorName") {
+        const pipeline = [
+            { $match: filter },
+            { $lookup: { from: "users", localField: "author", foreignField: "_id", as: "_author" } },
+            { $addFields: { _authorName: { $toLower: { $arrayElemAt: ["$_author.name", 0] } } } },
+            { $sort: { _authorName: 1 } },
+            { $skip: skip },
+            { $limit: limit },
+            { $project: { _author: 0, _authorName: 0 } },
+        ];
+        let posts = await Post.aggregate(pipeline);
+        posts = await Post.populate(posts, { path: "author", select: "name username avatar" });
+        return { posts, total, page, totalPages: Math.ceil(total / limit) };
+    }
+
+    let sortOption = { createdAt: -1 };
+    if (sort === "oldest") sortOption = { createdAt: 1 };
+    else if (sort === "likes") sortOption = { likesCount: -1 };
+    else if (sort === "comments") sortOption = { commentsCount: -1 };
+
+    const posts = await Post.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .populate("author", "name username avatar")
+        .lean();
     return { posts, total, page, totalPages: Math.ceil(total / limit) };
 };
 
@@ -92,13 +138,20 @@ const deletePost = async (postId) => {
     return Post.findByIdAndDelete(postId);
 };
 
-const getReports = async (page = 1, limit = 20, status = "") => {
+const getReports = async (page = 1, limit = 20, status = "", targetType = "", autoFlagged = "", sort = "") => {
     const filter = {};
     if (status) filter.status = status;
+    if (targetType) filter.targetType = targetType;
+    if (autoFlagged === "true") filter.autoFlagged = true;
+    else if (autoFlagged === "false") filter.autoFlagged = { $ne: true };
+
+    let sortOption = { createdAt: -1 };
+    if (sort === "oldest") sortOption = { createdAt: 1 };
+
     const skip = (page - 1) * limit;
     const [reports, total] = await Promise.all([
         Report.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .populate("reporter", "name username avatar")

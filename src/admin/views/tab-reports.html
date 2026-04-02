@@ -6,11 +6,29 @@
         </div>
         <div class="flex items-center gap-3">
             <select id="reportFilter"
-                class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none">
-                <option value="">Tất cả</option>
+                class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm">
+                <option value="">Tất cả trạng thái</option>
                 <option value="pending" selected>Chờ xử lý</option>
                 <option value="resolved">Đã giải quyết</option>
                 <option value="dismissed">Đã bỏ qua</option>
+            </select>
+            <select id="reportTypeFilter"
+                class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm">
+                <option value="">Tất cả loại</option>
+                <option value="post">Bài viết</option>
+                <option value="comment">Bình luận</option>
+                <option value="user">Người dùng</option>
+            </select>
+            <select id="reportSourceFilter"
+                class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm">
+                <option value="">Tất cả nguồn</option>
+                <option value="true">AI tự động</option>
+                <option value="false">Người dùng</option>
+            </select>
+            <select id="reportSortFilter"
+                class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm">
+                <option value="">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
             </select>
         </div>
     </div>

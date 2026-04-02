@@ -1,8 +1,14 @@
 // ========== POSTS ==========
 async function loadPosts() {
     const search = document.getElementById("postSearch").value.trim();
+    const type = document.getElementById("postTypeFilter").value;
+    const audience = document.getElementById("postAudienceFilter").value;
+    const sort = document.getElementById("postSortFilter").value;
     const params = new URLSearchParams({ page: postsPage, limit: 15 });
     if (search) params.set("search", search);
+    if (type) params.set("type", type);
+    if (audience) params.set("audience", audience);
+    if (sort) params.set("sort", sort);
 
     const tbody = document.getElementById("postsTableBody");
     tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...</td></tr>';

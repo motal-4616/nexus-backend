@@ -1,8 +1,38 @@
 // ========== REPORTS ==========
+function translateAIReason(reason) {
+    if (!reason) return "";
+    if (!reason.startsWith("AI detected")) return reason;
+    const map = {
+        "sexual": "Nội dung tình dục",
+        "sexual/minors": "Nội dung tình dục trẻ em",
+        "harassment": "Quấy rối",
+        "harassment/threatening": "Đe dọa",
+        "hate": "Thù ghét",
+        "hate/threatening": "Thù ghét / Đe dọa",
+        "illicit": "Bất hợp pháp",
+        "illicit/violent": "Bạo lực bất hợp pháp",
+        "self-harm": "Tự gây hại",
+        "self-harm/intent": "Ý định tự gây hại",
+        "self-harm/instructions": "Hướng dẫn tự gây hại",
+        "violence": "Bạo lực",
+        "violence/graphic": "Bạo lực đồ họa",
+    };
+    return reason.replace(/AI detected(?:\s+comment)?:\s*(.+)/, (_, cats) => {
+        const translated = cats.split(", ").map(c => map[c.trim()] || c.trim()).join(", ");
+        return "AI phát hiện: " + translated;
+    });
+}
+
 async function loadReports() {
     const status = document.getElementById("reportFilter").value;
+    const targetType = document.getElementById("reportTypeFilter").value;
+    const autoFlagged = document.getElementById("reportSourceFilter").value;
+    const sort = document.getElementById("reportSortFilter").value;
     const params = new URLSearchParams({ page: reportsPage, limit: 15 });
     if (status) params.set("status", status);
+    if (targetType) params.set("targetType", targetType);
+    if (autoFlagged) params.set("autoFlagged", autoFlagged);
+    if (sort) params.set("sort", sort);
 
     const tbody = document.getElementById("reportsTableBody");
     tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...</td></tr>';
@@ -69,7 +99,7 @@ async function loadReports() {
                     </td>
                     <td class="px-6 py-4">${typeBadge}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">${targetContent}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">${escapeHtml(r.reason || "")}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">${escapeHtml(translateAIReason(r.reason) || "")}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-1.5">
                             ${statusBadge}

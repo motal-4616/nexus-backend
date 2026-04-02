@@ -1,8 +1,14 @@
 // ========== USERS ==========
 async function loadUsers() {
     const search = document.getElementById("userSearch").value.trim();
+    const status = document.getElementById("userStatusFilter").value;
+    const role = document.getElementById("userRoleFilter").value;
+    const sort = document.getElementById("userSortFilter").value;
     const params = new URLSearchParams({ page: usersPage, limit: 15 });
     if (search) params.set("search", search);
+    if (status) params.set("status", status);
+    if (role) params.set("role", role);
+    if (sort) params.set("sort", sort);
 
     const tbody = document.getElementById("usersTableBody");
     tbody.innerHTML =

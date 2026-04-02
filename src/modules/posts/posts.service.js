@@ -282,6 +282,21 @@ const addComment = async (postId, authorId, content) => {
     post.commentsCount += 1;
     await post.save();
 
+    // Notify tagged users in comment
+    const taggedInComment = await resolveTaggedUsers(content);
+    for (const taggedId of taggedInComment) {
+        if (taggedId.toString() !== authorId.toString()) {
+            createAndPushNotification({
+                recipientId: taggedId,
+                actorId: authorId,
+                type: "tag",
+                targetRef: post._id,
+                targetModel: "Post",
+                message: "tagged you in a comment",
+            }).catch(() => {});
+        }
+    }
+
     // AI: moderate comment (non-blocking)
     moderateContent(content)
         .then(async (modResult) => {

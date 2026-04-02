@@ -57,6 +57,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 400);
     });
 
+    // User filters
+    document.getElementById("userStatusFilter").addEventListener("change", () => {
+        usersPage = 1;
+        loadUsers();
+    });
+    document.getElementById("userRoleFilter").addEventListener("change", () => {
+        usersPage = 1;
+        loadUsers();
+    });
+    document.getElementById("userSortFilter").addEventListener("change", () => {
+        usersPage = 1;
+        loadUsers();
+    });
+
     // Debounced post search
     let postSearchTimer = null;
     document.getElementById("postSearch").addEventListener("input", () => {
@@ -67,8 +81,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 400);
     });
 
+    // Post filters
+    document.getElementById("postTypeFilter").addEventListener("change", () => {
+        postsPage = 1;
+        loadPosts();
+    });
+    document.getElementById("postAudienceFilter").addEventListener("change", () => {
+        postsPage = 1;
+        loadPosts();
+    });
+    document.getElementById("postSortFilter").addEventListener("change", () => {
+        postsPage = 1;
+        loadPosts();
+    });
+
     // Reports filter
     document.getElementById("reportFilter").addEventListener("change", () => {
+        reportsPage = 1;
+        loadReports();
+    });
+    document.getElementById("reportTypeFilter").addEventListener("change", () => {
+        reportsPage = 1;
+        loadReports();
+    });
+    document.getElementById("reportSourceFilter").addEventListener("change", () => {
+        reportsPage = 1;
+        loadReports();
+    });
+    document.getElementById("reportSortFilter").addEventListener("change", () => {
         reportsPage = 1;
         loadReports();
     });
