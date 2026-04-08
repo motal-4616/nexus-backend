@@ -4,7 +4,7 @@ const sendOTPEmail = async (email, otp) => {
     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.sender = { name: "Nexus", email: "no-reply@nexus-app.com" };
+    sendSmtpEmail.sender = { name: "Nexus", email: "xmeosadx@gmail.com" };
     sendSmtpEmail.to = [{ email }];
     sendSmtpEmail.subject = "Your Nexus password reset code";
     sendSmtpEmail.htmlContent = `
